@@ -3,80 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>J.A.R.V.I.S. — ACCESS TERMINAL</title>
+<title>J.A.R.V.I.S.</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-:root{--cy:#3fd0ff;--dim:color-mix(in srgb,var(--cy) 35%,transparent);--faint:color-mix(in srgb,var(--cy) 10%,transparent);--hot:#bfeaff;--panel:color-mix(in srgb,var(--cy) 6%,rgba(0,0,0,.78))}
+:root{--cy:#3fd0ff;--dim:color-mix(in srgb,var(--cy) 35%,transparent);--faint:color-mix(in srgb,var(--cy) 10%,transparent);--hot:#bfeaff;--panel:color-mix(in srgb,var(--cy) 6%,rgba(0,0,0,.75))}
 body.gold{--cy:#ffc46b;--hot:#ffe9c4}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:#000;color:var(--cy);font:13px "Share Tech Mono",monospace;overflow:hidden}
+body{background:#000;color:var(--cy);font:12px "Share Tech Mono",monospace;overflow:hidden}
 input,select,button{font:inherit;color:var(--cy)}
-input,select{background:transparent;border:1px solid var(--dim);padding:8px 10px;outline:none;width:100%}
-input:focus{border-color:var(--cy);box-shadow:0 0 10px var(--faint)}
+input,select{background:transparent;border:1px solid var(--dim);padding:6px 8px;outline:none;width:100%}
+input:focus{border-color:var(--cy);box-shadow:0 0 8px var(--faint)}
 .hidden{display:none!important}
-.dim{opacity:.75}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.85))}
-#scan{position:fixed;left:0;right:0;height:90px;top:-100px;z-index:97;pointer-events:none;background:linear-gradient(180deg,transparent,var(--faint),transparent);animation:scan 7s linear infinite}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;
+ background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),
+ radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.85))}
+#scan{position:fixed;left:0;right:0;height:90px;top:-100px;z-index:97;pointer-events:none;
+ background:linear-gradient(180deg,transparent,var(--faint),transparent);animation:scan 7s linear infinite}
 @keyframes scan{to{top:110%}}
-#bg{position:fixed;inset:0;margin:auto;width:min(78vmin,640px);opacity:.16;pointer-events:none}
-.ring{transform-box:fill-box;transform-origin:center}
-.r1{animation:spin 40s linear infinite}.r2{animation:spin 16s linear infinite reverse}
-@keyframes spin{to{transform:rotate(360deg)}}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60}
-#boot{z-index:99;cursor:pointer;align-items:flex-start;justify-content:flex-start;padding:9vh 11vw}
-#bootlog{font-size:13px;line-height:1.8;text-shadow:0 0 8px var(--cy);white-space:pre-wrap}
-#boot .skip{position:absolute;bottom:26px;right:34px;opacity:.6;letter-spacing:2px}
-.panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 18px var(--faint);padding:8px 10px;position:relative}
-.panel::before,.panel::after{content:"";position:absolute;width:10px;height:10px;border:0 solid var(--cy);opacity:.9}
+#hud{height:100%;display:grid;gap:6px;padding:8px;
+ grid-template-columns:290px 1fr 330px;grid-template-rows:52px 1fr 44px;
+ grid-template-areas:"top top top" "left center right" "foot foot foot"}
+.panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 16px var(--faint);padding:6px 8px;position:relative}
+.panel::before,.panel::after{content:"";position:absolute;width:9px;height:9px;border:0 solid var(--cy);opacity:.9}
 .panel::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
 .panel::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
-.gpanel{width:430px;max-width:94vw;padding:20px}
-.gpanel h2{font:700 16px Orbitron;letter-spacing:4px;margin-bottom:14px;text-shadow:0 0 10px var(--cy)}
-.gtabs{display:flex;gap:4px;margin-bottom:12px}
-.gtabs .btn{flex:1;padding:6px 2px;font-size:10px;letter-spacing:1px}
-.btn{border:1px solid var(--dim);background:var(--faint);padding:6px 12px;letter-spacing:1px;cursor:pointer}
+.panel h3{font-size:10px;letter-spacing:2px;border-bottom:1px solid var(--dim);padding-bottom:3px;margin-bottom:5px;display:flex;justify-content:space-between}
+.panel h3::after{content:"▮";animation:blink 1.1s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+.col{display:flex;flex-direction:column;gap:6px;overflow-y:auto;scrollbar-width:none}
+.col::-webkit-scrollbar{display:none}
+canvas{width:100%;display:block}
+.kv{display:flex;justify-content:space-between;font-size:11px;padding:1px 2px}
+.kv b{color:var(--hot)}
+.btn{border:1px solid var(--dim);background:var(--faint);padding:4px 10px;letter-spacing:1px;cursor:pointer;text-decoration:none;color:var(--cy)}
 .btn:hover{background:var(--dim);box-shadow:0 0 10px var(--faint)}
 .btn.hot{background:var(--cy);color:#00131f}
-.gsec{display:flex;flex-direction:column;gap:9px}
+#top{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.badge{display:flex;gap:8px;align-items:center}
+.avatar{width:34px;height:34px;border-radius:50%;border:1px solid var(--dim);
+ background:radial-gradient(circle at 35% 35%,var(--hot) 0%,color-mix(in srgb,var(--cy) 60%,#003) 45%,#001 100%);box-shadow:0 0 12px var(--faint)}
+.badge small{display:block;opacity:.8}
+#top nav{display:flex;gap:6px;align-items:center}
+#left{grid-area:left}#right{grid-area:right}
+#center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#reactor{width:min(46vh,410px);transition:filter .6s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cy) 45%,transparent))}
+#reactor.flare{filter:drop-shadow(0 0 40px var(--cy)) brightness(1.9)}
+.ring{transform-box:fill-box;transform-origin:center}
+.r1{animation:spin 70s linear infinite}.r2{animation:spin 26s linear infinite reverse}
+.r3{animation:spin 12s linear infinite}.r4{animation:spin 45s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.core{animation:pulse 3.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.72}}
+#reactor:not(.online) .core{opacity:.28}
+#reactor:not(.online) .ring{animation-play-state:paused}
+#reactor text{fill:var(--cy);font-size:11px;letter-spacing:3px}
+#rlabel{text-align:center;letter-spacing:3px;font-size:11px}
+#rlabel b{color:var(--hot)}
+#console-wrap{width:min(94%,600px)}
+#corelog{height:80px;overflow:hidden;opacity:.9;font-size:11px;margin-bottom:5px;line-height:1.45}
+#crow{display:flex;gap:6px}
+#console{flex:1}
+#clock{font:700 32px Orbitron;letter-spacing:3px;text-shadow:0 0 14px var(--cy)}
+.wx{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.wx b{font:700 28px Orbitron;text-shadow:0 0 10px var(--cy)}
+#foot{grid-area:foot;display:flex;align-items:center;justify-content:center;gap:18px}
+#foot::before,#foot::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--dim))}
+#foot::after{background:linear-gradient(90deg,var(--dim),transparent)}
+#foot span{font:900 18px Orbitron;letter-spacing:10px;color:var(--hot);text-shadow:0 0 18px var(--cy)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60}
+#boot{z-index:99;cursor:pointer;align-items:flex-start;justify-content:flex-start;padding:8vh 10vw}
+#bootlog{font-size:13px;line-height:1.7;text-shadow:0 0 8px var(--cy);white-space:pre-wrap}
+#boot .skip{position:absolute;bottom:24px;right:32px;opacity:.6;letter-spacing:2px}
+.gpanel{width:420px;max-width:94vw;padding:18px}
+.gpanel h2{font:700 16px Orbitron;letter-spacing:4px;margin-bottom:12px;text-shadow:0 0 10px var(--cy)}
+.gtabs{display:flex;gap:4px;margin-bottom:10px}
+.gtabs .btn{flex:1;padding:5px 2px;font-size:10px}
+.gsec{display:flex;flex-direction:column;gap:8px}
 .inrow{display:flex;gap:6px}
-.gerr{color:#ff7b7b;min-height:16px;font-size:11px}
-.ghint{margin-top:14px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
-.row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
-.modal{width:440px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:18px}
+.gerr{color:#ff7b7b;min-height:14px;font-size:11px}
+.ghint{margin-top:12px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.modal{width:430px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:16px}
 .modal h2{font:700 14px Orbitron;letter-spacing:3px;margin-bottom:10px}
 .frow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
-.frow select{width:60%}
-.kv{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px}
-#foot{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;z-index:50}
-#foot span{font:900 15px Orbitron;letter-spacing:8px;color:var(--hot);text-shadow:0 0 16px var(--cy)}
+.frow input,.frow select{width:60%}
+#tgt{position:fixed;inset:0;z-index:70;cursor:crosshair;display:none}
+#tgt.on{display:block}
+#tgt .ln{position:absolute;background:var(--dim)}
+#tx{top:0;bottom:0;width:1px}#ty{left:0;right:0;height:1px}
+#tring{position:absolute;width:70px;height:70px;border:1px solid var(--cy);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px var(--faint)}
+#tring::after{content:"";position:absolute;inset:30px;border:1px solid var(--cy);border-radius:50%}
+#tread{position:absolute;left:16px;bottom:14px;font-size:11px;text-shadow:0 0 6px var(--cy)}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media(max-width:960px){body{overflow:auto}#hud{height:auto;grid-template-columns:1fr;grid-template-rows:auto;grid-template-areas:"top" "center" "right" "left" "foot"}}
 </style>
 </head>
 <body>
 <div id="scan"></div>
-<svg id="bg" viewBox="0 0 400 400">
- <g class="ring r1"><circle cx="200" cy="200" r="190" fill="none" stroke="var(--cy)" stroke-dasharray="3 7"/>
- <circle cx="200" cy="200" r="170" fill="none" stroke="var(--cy)" stroke-width="3" stroke-dasharray="60 14 6 14"/></g>
- <g class="ring r2"><circle cx="200" cy="200" r="140" fill="none" stroke="var(--cy)" stroke-width="12" stroke-dasharray="16 10"/></g>
- <polygon points="130,155 270,155 200,275" fill="none" stroke="var(--cy)" stroke-width="8" stroke-linejoin="round"/>
-</svg>
 
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK TO SKIP ▸</div></div>
 
-<div id="enter" class="overlay hidden">
- <div class="gpanel panel">
-  <h2>WELCOME BACK</h2>
-  <p class="dim" id="enter-who"></p>
-  <div class="row">
-   <button class="btn hot" id="enter-go">ENTER HUD ▸</button>
-   <button class="btn hidden" id="enter-admin">ADMIN</button>
-   <button class="btn" id="enter-switch">SWITCH USER</button>
-  </div>
- </div>
-</div>
-
+<!-- ============ SIGN UP / SIGN IN ============ -->
 <div id="gate" class="overlay hidden">
  <div class="gpanel panel" id="gpanel">
   <h2>ACCESS TERMINAL</h2>
@@ -108,17 +137,42 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;bac
   </div>
   <div id="gate-pending" class="hidden">
    <p style="letter-spacing:3px">⏳ PENDING</p>
-   <p class="dim" style="margin:10px 0">Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.</p>
+   <p style="margin:10px 0;opacity:.8">Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.</p>
    <button class="btn" id="pb-back">BACK</button>
   </div>
   <div id="gate-denied" class="hidden">
    <p style="letter-spacing:3px;color:#ff7b7b">⛔ DENIED</p>
-   <p class="dim" style="margin:10px 0">Your request was denied by an admin.</p>
+   <p style="margin:10px 0;opacity:.8">Your request was denied by an admin.</p>
    <div class="row"><button class="btn" id="gd-re">SUBMIT NEW REQUEST</button><button class="btn" id="gd-back">BACK</button></div>
   </div>
  </div>
 </div>
 
+<!-- ============ SETTINGS ============ -->
+<div id="settings" class="overlay hidden">
+ <div class="modal panel">
+  <h2>SETTINGS — IDENTITY</h2>
+  <div class="frow"><span>Assistant name</span><input id="set-name"></div>
+  <div class="frow"><span>Address me as</span><input id="set-user"></div>
+  <div class="frow"><span>Personality</span>
+   <select id="set-pers"><option value="butler">Butler</option><option value="snark">Snark</option><option value="pirate">Pirate</option><option value="hype">Hype</option></select></div>
+  <div class="frow"><span>Voice replies</span><input type="checkbox" id="set-voice" style="width:auto"></div>
+  <div class="frow"><span>Interface sounds</span><input type="checkbox" id="set-sounds" style="width:auto"></div>
+  <h2 style="margin-top:14px">SETTINGS — GEMINI UPLINK</h2>
+  <div class="frow"><span>API key</span>
+   <div class="inrow" style="width:60%"><input id="set-key" type="password" placeholder="AIza…"><button class="btn" id="set-show">SHOW</button></div></div>
+  <div class="frow"><span></span><span id="set-stat" style="opacity:.7"></span></div>
+  <div class="row">
+   <button class="btn" id="set-test">TEST</button>
+   <button class="btn" id="set-save">SAVE</button>
+   <button class="btn" id="set-logout">LOG OUT</button>
+   <button class="btn" id="set-close">CLOSE</button>
+  </div>
+  <div class="ghint">Stored locally. Get free key at aistudio.google.com</div>
+ </div>
+</div>
+
+<!-- ============ ADMIN ============ -->
 <div id="admin" class="overlay hidden">
  <div class="modal panel">
   <h2>ADMIN DASHBOARD</h2>
@@ -130,7 +184,81 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;bac
  </div>
 </div>
 
-<footer id="foot"><span>STARK INDUSTRIES</span></footer>
+<!-- ============ TARGETING ============ -->
+<div id="tgt"><div class="ln" id="tx"></div><div class="ln" id="ty"></div><div id="tring"></div>
+ <div id="tread">TGT-MODE v2.4 · X: <span id="t-x">0000</span> Y: <span id="t-y">0000</span> · RANGE: <span id="t-range">--</span> · LOCK: <span id="t-lock">--</span> · [T] OR ◎ TO DISENGAGE</div></div>
+
+<!-- ============ HUD ============ -->
+<div id="hud">
+ <header id="top" class="panel">
+  <div class="badge"><div class="avatar"></div>
+   <div><b>J.A.R.V.I.S.</b><small>USER: <span id="badge-user">—</span></small></div></div>
+  <div>⚠ STARK PROTOCOL · CORE: <b id="corestate">ONLINE</b> · UPLINK: <b id="uplinkstate">OFFLINE</b> · <span id="utcmini">--:--:--</span> UTC</div>
+  <nav>
+   <button class="btn" id="btn-tgt" title="Targeting [T]">◎ TARGET</button>
+   <button class="btn" id="btn-snd">🔊</button>
+   <button class="btn hidden" id="btn-admin">ADMIN</button>
+   <button class="btn" id="btn-set">⚙ SETTINGS</button>
+   <a class="btn" href="chat.html">💬 CHAT</a>
+  </nav>
+ </header>
+
+ <aside id="left" class="col">
+  <section class="panel"><h3>CORE OUTPUT</h3>
+   <div class="kv"><span>CORE %</span><b>98</b></div>
+   <div class="kv"><span>THRUSTERS</span><b>STBY</b></div>
+   <div class="kv"><span>AUX SYSTEMS</span><b>OK</b></div></section>
+  <section class="panel"><h3>DATA BUS</h3><canvas id="g-bus" width="270" height="52"></canvas></section>
+  <section class="panel"><h3>PROXIMITY SCAN</h3><canvas id="radar" width="270" height="160"></canvas>
+   <div class="kv"><span>CONTACTS</span><b>2</b></div>
+   <div class="kv"><span>THREAT</span><b>NONE</b></div></section>
+  <section class="panel"><h3>CIPHER FEED</h3><div id="cipher" style="font-size:10px;line-height:1.6;opacity:.8;height:88px;overflow:hidden"></div></section>
+ </aside>
+
+ <main id="center">
+  <svg id="reactor" viewBox="0 0 400 400">
+   <defs><filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <path id="tp" d="M200,200 m-168,0 a168,168 0 1,1 336,0 a168,168 0 1,1 -336,0"/></defs>
+   <g class="ring r1">
+    <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
+    <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
+   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.4 · </textPath></text></g>
+   <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
+   <g class="ring r3">
+    <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
+    <circle cx="200" cy="200" r="112" fill="none" stroke="var(--cy)" stroke-width="9" stroke-dasharray="2 7"/></g>
+   <g class="core" filter="url(#glow)">
+    <polygon points="120,150 280,150 200,290" fill="none" stroke="var(--hot)" stroke-width="12" stroke-linejoin="round"/>
+    <polygon points="146,166 254,166 200,262" fill="color-mix(in srgb,var(--cy) 25%,transparent)" stroke="var(--cy)" stroke-width="3"/>
+    <circle cx="200" cy="196" r="16" fill="#eaffff"/></g>
+  </svg>
+  <div id="rlabel">ARC REACTOR — MARK VII · <b id="reactor-state">STANDBY</b></div>
+  <div id="console-wrap" class="panel">
+   <h3>COMMAND CONSOLE</h3>
+   <div id="corelog"></div>
+   <div id="crow"><input id="console" placeholder="Ask JARVIS…" autocomplete="off">
+    <button class="btn" id="send-btn">SEND</button><button class="btn" id="mic-btn">🎤 MIC</button></div>
+  </div>
+ </main>
+
+ <aside id="right" class="col">
+  <section class="panel"><h3>CHRONO</h3><div id="clock">--:--:--</div>
+   <div class="kv"><span id="datestr">—</span><span>UTC</span></div></section>
+  <section class="panel"><h3>ENVIRONMENT</h3>
+   <div class="wx"><b id="temp">--°C</b><span id="cond">—</span></div>
+   <div class="kv"><span>EXTERNAL TEMP</span><b id="temp2">—</b></div>
+   <div class="kv"><span>HUMIDITY</span><b id="hum">—</b></div>
+   <div class="kv"><span>PRESSURE</span><b id="pres">—</b></div></section>
+  <section class="panel"><h3>UPLINK ARRAY</h3>
+   <div class="kv"><span>SAT-7</span><b>LINKED</b></div>
+   <div class="kv"><span>ENCRYPT</span><b>AES-256</b></div>
+   <div class="kv"><span>PACKETS</span><b id="pkt">0</b></div>
+   <canvas id="g-up" width="300" height="46"></canvas></section>
+ </aside>
+
+ <footer id="foot"><span>STARK INDUSTRIES</span></footer>
+</div>
 
 <script>
 "use strict";
@@ -138,75 +266,68 @@ const $=id=>document.getElementById(id);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const sj=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const DEST=(()=>{const n=new URLSearchParams(location.search).get("next");
- return n&&/^[a-z0-9\-_]+\.html$/i.test(n)?n:"jarvis04.html";})();
+let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0ff";
 
-/* shared store — SAME keys as jarvis04 */
+let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
+
+/* sound */
+let AC=null;
+function beep(f=880,d=.06,type="square",g=.05){
+  if(!identity.sounds)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+   const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f;ga.gain.value=g;
+   o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function speak(t){
+  if(!identity.voice||!("speechSynthesis" in window))return;
+  const u=new SpeechSynthesisUtterance(t.replace(/[*_`#]/g,""));u.rate=1.02;u.pitch=.9;
+  const v=speechSynthesis.getVoices().find(v=>/en-GB/i.test(v.lang));if(v)u.voice=v;
+  speechSynthesis.speak(u);}
+function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);}
+
+/* ============ BOOT ============ */
+const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
+"INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
+"SECURITY ................ STARK PROTOCOL","","BOOT COMPLETE — WAKE UP, SIR."];
+let skipBoot=false;
+$("boot").addEventListener("click",()=>skipBoot=true);
+(async()=>{
+ for(const L of bootLines){if(skipBoot)break;
+  const d=document.createElement("div");d.textContent=L;$("bootlog").appendChild(d);
+  beep(300+Math.random()*300,.02,"sawtooth",.015);await wait(L?150:60);}
+ if(skipBoot)$("bootlog").innerHTML=bootLines.join("<br>");
+ await wait(500);
+ $("boot").style.transition="opacity .7s";$("boot").style.opacity=0;
+ setTimeout(()=>$("boot").remove(),750);
+ checkGate();})();
+
+/* ============ SIGN UP / SIGN IN ============ */
 let users=lj("jarvis-users",{});
 if(!users.admin){users.admin={pass:"stark",role:"admin"};sj("jarvis-users",users);}
 let session=localStorage.getItem("jarvis-session")||"";
 const MODE=()=>localStorage.getItem("jarvis-access-mode")||"everyone";
 
-let AC=null;
-function beep(f=880,d=.07){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
- const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.05;
- o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
-
-/* boot */
-const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","SECURITY HANDSHAKE ........ STARK PROTOCOL",
-"IDENTITY MATRIX ........... LOADED","ACCESS TERMINAL ........... READY"];
-let skip=false;
-$("boot").addEventListener("click",()=>skip=true);
-(async()=>{for(const L of bootLines){if(skip)break;
-  const d=document.createElement("div");d.textContent=L;$("bootlog").appendChild(d);await wait(220);}
- if(skip)$("bootlog").innerHTML=bootLines.join("<br>");
- await wait(400);$("boot").style.transition="opacity .6s";$("boot").style.opacity=0;
- setTimeout(()=>$("boot").remove(),650);route();})();
-
-function route(){
- if(session&&users[session])return showEnter();
- if(MODE()==="everyone"){session="Guest";localStorage.setItem("jarvis-session","Guest");return go();}
- $("gate").classList.remove("hidden");
- if(localStorage.getItem("jarvis-pending-name"))gatePoll();}
-function go(){location.href=DEST;}
-
-/* welcome back */
-let enterTimer=null;
-function showEnter(){
- $("enter").classList.remove("hidden");
- $("enter-who").textContent=`SIGNED IN AS ${session} (${users[session].role})`;
- if(users[session].role==="admin")$("enter-admin").classList.remove("hidden");
- enterTimer=setTimeout(go,3000);}
-$("enter-go").onclick=()=>{clearTimeout(enterTimer);go();};
-$("enter-switch").onclick=()=>{clearTimeout(enterTimer);localStorage.removeItem("jarvis-session");
- session="";$("enter").classList.add("hidden");$("gate").classList.remove("hidden");};
-$("enter-admin").onclick=()=>{clearTimeout(enterTimer);renderAdmin();$("admin").classList.remove("hidden");};
-
-/* tabs + passkey eyes */
 document.querySelectorAll("[data-gt]").forEach(b=>b.onclick=()=>{
  document.querySelectorAll("[data-gt]").forEach(x=>x.classList.toggle("hot",x===b));
- document.querySelectorAll("[data-gs]").forEach(s=>s.classList.toggle("hidden",s.dataset.gs!==b.dataset.gt));beep(700,.04);});
+ document.querySelectorAll("[data-gs]").forEach(s=>s.classList.toggle("hidden",s.dataset.gs!==b.dataset.gt));
+ beep(700,.04);});
 document.querySelectorAll("[data-eye]").forEach(b=>b.onclick=()=>{
  const i=$(b.dataset.eye);i.type=i.type==="password"?"text":"password";});
-
-/* sign in */
 function shake(){const g=$("gpanel");g.classList.remove("shake");void g.offsetWidth;g.classList.add("shake");}
+
 $("gi-go").onclick=()=>{
  const n=$("gi-name").value.trim(),p=$("gi-pass").value;
- if(users[n]&&users[n].pass===p){session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);go();}
- else{$("gi-err").textContent="ACCESS DENIED — credentials not recognized.";shake();beep(180,.2);}};
-$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();});
+ if(users[n]&&users[n].pass===p){session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);unlock();}
+ else{$("gi-err").textContent="ACCESS DENIED — credentials not recognized.";shake();beep(180,.2,"sawtooth");}};
+$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();};
 
-/* create account */
-$("ca-go").onclick=()=>{
+$("ca-go").onclick=()=>{ /* SIGN UP */
  const n=$("ca-name").value.trim(),p=$("ca-pass").value;
  if(n.length<2||p.length<2)return $("ca-err").textContent="Callsign & passkey: 2+ chars.";
  if(MODE()!=="everyone")return $("ca-err").textContent="Restricted — submit an access request instead.";
  if(users[n])return $("ca-err").textContent="Callsign taken.";
  users[n]={pass:p,role:"user"};sj("jarvis-users",users);
- localStorage.setItem("jarvis-session",n);beep(1040,.1);go();};
+ session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);unlock();};
 
-/* request access */
 $("ra-go").onclick=()=>{
  const n=$("ra-name").value.trim(),p=$("ra-pass").value;
  if(n.length<2)return $("ra-err").textContent="Callsign required.";
@@ -216,8 +337,7 @@ $("ra-go").onclick=()=>{
 function showPending(){$("gate-main").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-pending").classList.remove("hidden");}
 function showDenied(){$("gate-main").classList.add("hidden");$("gate-pending").classList.add("hidden");$("gate-denied").classList.remove("hidden");}
 function showMain(){$("gate-pending").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-main").classList.remove("hidden");}
-$("pb-back").onclick=showMain;
-$("gd-back").onclick=showMain;
+$("pb-back").onclick=showMain;$("gd-back").onclick=showMain;
 $("gd-re").onclick=()=>{showMain();document.querySelector('[data-gt="req"]').click();};
 
 function gatePoll(){
@@ -226,11 +346,29 @@ function gatePoll(){
  if(!r||r.status==="pending")return showPending();
  if(r.status==="denied")return showDenied();
  localStorage.removeItem("jarvis-pending-name");
- session=n;localStorage.setItem("jarvis-session",n);beep(1040,.12);go();}
+ session=n;localStorage.setItem("jarvis-session",n);beep(1040,.12);unlock();}
 setInterval(gatePoll,2000);
 window.addEventListener("storage",gatePoll);
 
-/* admin */
+function checkGate(){
+ if(session&&users[session])return unlock();
+ if(MODE()==="everyone"){session="Guest";return unlock();}
+ $("gate").classList.remove("hidden");
+ if(localStorage.getItem("jarvis-pending-name"))gatePoll();}
+
+function unlock(){
+ $("gate").classList.add("hidden");
+ $("badge-user").textContent=session;
+ $("reactor").classList.add("online");
+ $("reactor-state").textContent="ONLINE";
+ if(users[session]?.role==="admin")$("btn-admin").classList.remove("hidden");
+ flare();
+ const h=new Date().getHours(),part=h<12?"morning":h<18?"afternoon":"evening";
+ jarvisSay(`All systems online. Good ${part}, ${identity.user||session||"sir"}.`);
+ beep(520,.09);setTimeout(()=>beep(780,.12),120);}
+
+/* ============ ADMIN ============ */
+$("btn-admin").onclick=()=>{renderAdmin();$("admin").classList.remove("hidden");};
 $("adm-close").onclick=()=>$("admin").classList.add("hidden");
 $("adm-mode").onchange=e=>{localStorage.setItem("jarvis-access-mode",e.target.value);beep(600,.05);};
 function renderAdmin(){
@@ -238,26 +376,161 @@ function renderAdmin(){
  const reqs=lj("jarvis-requests",[]);$("adm-req").innerHTML="";
  if(!reqs.length)$("adm-req").innerHTML='<div class="kv"><span>—</span><span>no requests</span></div>';
  reqs.forEach(r=>{const d=document.createElement("div");d.className="kv";
-  d.innerHTML=`<span>${r.name} <i class="dim">(${r.status})</i></span><span></span>`;
+  d.innerHTML=`<span>${r.name} <i style="opacity:.6">(${r.status})</i></span><span></span>`;
   const box=d.lastChild;
   if(r.status==="pending"){
    const a=document.createElement("button");a.className="btn";a.textContent="✔";
-   a.onclick=()=>{r.status="approved";users[r.name]={pass:r.pass,role:"user"};sj("jarvis-requests",reqs);sj("jarvis-users",users);beep(900,.08);renderAdmin();};
+   a.onclick=()=>{r.status="approved";users[r.name]={pass:r.pass,role:"user"};sj("jarvis-requests",reqs);sj("jarvis-users",users);beep(900,.08);flare();renderAdmin();};
    const x=document.createElement("button");x.className="btn";x.textContent="✖";
-   x.onclick=()=>{r.status="denied";sj("jarvis-requests",reqs);beep(200,.15);renderAdmin();};
+   x.onclick=()=>{r.status="denied";sj("jarvis-requests",reqs);beep(200,.15,"sawtooth");renderAdmin();};
    box.append(a,x);}
   $("adm-req").appendChild(d);});
  $("adm-users").innerHTML="";
  Object.keys(users).forEach(n=>{const d=document.createElement("div");d.className="kv";
-  d.innerHTML=`<span>${n} <i class="dim">(${users[n].role})</i></span><span></span>`;
+  d.innerHTML=`<span>${n} <i style="opacity:.6">(${users[n].role})</i></span><span></span>`;
   if(n!=="admin"&&n!==session){const x=document.createElement("button");x.className="btn";x.textContent="✖";
    x.onclick=()=>{delete users[n];sj("jarvis-users",users);renderAdmin();};d.lastChild.appendChild(x);}
   $("adm-users").appendChild(d);});}
 
-/* konami */
+/* ============ SETTINGS ============ */
+$("btn-set").onclick=()=>{
+ $("set-name").value=identity.name;$("set-user").value=identity.user;
+ $("set-pers").value=identity.pers;$("set-voice").checked=identity.voice;
+ $("set-sounds").checked=identity.sounds;$("set-key").value=localStorage.getItem("jarvis-gemini-key")||"";
+ $("settings").classList.remove("hidden");};
+$("set-close").onclick=()=>$("settings").classList.add("hidden");
+$("set-show").onclick=()=>{const k=$("set-key");k.type=k.type==="password"?"text":"password";};
+$("set-save").onclick=()=>{
+ identity={name:$("set-name").value.trim()||"JARVIS",user:$("set-user").value.trim(),
+  pers:$("set-pers").value,voice:$("set-voice").checked,sounds:$("set-sounds").checked};
+ sj("jarvis-identity",identity);
+ localStorage.setItem("jarvis-gemini-key",$("set-key").value.trim());
+ $("uplinkstate").textContent=$("set-key").value.trim()?"ONLINE":"OFFLINE";
+ syncSnd();$("set-stat").textContent="Saved.";beep(880,.08);};
+$("set-test").onclick=async()=>{
+ localStorage.setItem("jarvis-gemini-key",$("set-key").value.trim());
+ $("set-stat").textContent="Testing…";
+ const r=await askGemini("Reply with exactly: UPLINK ONLINE.");
+ $("set-stat").textContent=r?"✔ "+r:"✖ no response — check key/network";
+ if(r)$("uplinkstate").textContent="ONLINE";};
+$("set-logout").onclick=()=>{localStorage.removeItem("jarvis-session");location.reload();};
+$("btn-snd").onclick=()=>{identity.sounds=!identity.sounds;sj("jarvis-identity",identity);syncSnd();beep(880,.08);};
+function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"🔇";}
+syncSnd();
+if(localStorage.getItem("jarvis-gemini-key"))$("uplinkstate").textContent="ONLINE";
+
+/* ============ TELEMETRY ============ */
+setInterval(()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
+ const t=p(d.getUTCHours())+":"+p(d.getUTCMinutes())+":"+p(d.getUTCSeconds());
+ $("clock").textContent=t;$("utcmini").textContent=t;
+ $("datestr").textContent=d.toUTCString().slice(0,16).toUpperCase();},1000);
+
+function lineGraph(id){const cv=$(id),x=cv.getContext("2d"),N=72,
+ d=Array.from({length:N},()=>.3+Math.random()*.4);
+ return()=>{d.push(Math.min(.95,Math.max(.05,d[d.length-1]+(Math.random()-.5)*.25)));d.shift();
+  x.clearRect(0,0,cv.width,cv.height);
+  x.strokeStyle=COL;x.globalAlpha=.18;x.beginPath();
+  for(let y=8;y<cv.height;y+=12){x.moveTo(0,y);x.lineTo(cv.width,y);}x.stroke();
+  x.globalAlpha=1;x.strokeStyle=COL;x.shadowColor=COL;x.shadowBlur=6;x.beginPath();
+  d.forEach((v,i)=>{const X=i*cv.width/(N-1),Y=cv.height-v*cv.height;i?x.lineTo(X,Y):x.moveTo(X,Y);});
+  x.stroke();x.shadowBlur=0;};}
+function barGraph(id,n){const cv=$(id),x=cv.getContext("2d"),v=Array.from({length:n},()=>Math.random());
+ return()=>{x.clearRect(0,0,cv.width,cv.height);const w=cv.width/n;
+  v.forEach((val,i)=>{v[i]=Math.min(1,Math.max(.08,val+(Math.random()-.5)*.3));
+   const h=v[i]*cv.height;x.fillStyle=COL;x.globalAlpha=.85;
+   x.fillRect(i*w+1,cv.height-h,w-3,h);});x.globalAlpha=1;};}
+function radar(id){const cv=$(id),x=cv.getContext("2d"),W=cv.width,H=cv.height,
+ cx=W/2,cy=H/2,R=Math.min(W,H)/2-6,blips=[{a:.9,r:.55},{a:2.6,r:.82}];let a=Math.random()*6;
+ return()=>{x.clearRect(0,0,W,H);x.strokeStyle=COL;
+  for(let r=R;r>8;r-=R/3){x.globalAlpha=.25;x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();}
+  x.globalAlpha=.25;x.beginPath();x.moveTo(cx-R,cy);x.lineTo(cx+R,cy);x.moveTo(cx,cy-R);x.lineTo(cx,cy+R);x.stroke();
+  x.save();x.translate(cx,cy);x.rotate(a);
+  const g=x.createLinearGradient(0,0,R,0);g.addColorStop(0,"transparent");g.addColorStop(1,COL);
+  x.globalAlpha=.5;x.strokeStyle=g;x.beginPath();x.moveTo(0,0);x.lineTo(R,0);x.stroke();x.restore();
+  blips.forEach(b=>{let d=(a-b.a)%(Math.PI*2);if(d<0)d+=Math.PI*2;
+   x.globalAlpha=.25+Math.max(0,1-d/2)*.75;x.fillStyle=COL;
+   x.beginPath();x.arc(cx+Math.cos(b.a)*b.r*R,cy+Math.sin(b.a)*b.r*R,2.5,0,7);x.fill();});
+  x.globalAlpha=1;a+=.035;};}
+const graphs=[lineGraph("g-up"),barGraph("g-bus",14),radar("radar")];
+setInterval(()=>graphs.forEach(f=>f()),120);
+
+let pkt=0;
+setInterval(()=>{pkt+=1+Math.floor(Math.random()*6);$("pkt").textContent=pkt;},900);
+setInterval(()=>{const hex=Array.from({length:4},()=>Math.floor(Math.random()*65536).toString(16).padStart(4,"0").toUpperCase()).join(" ");
+ const d=document.createElement("div");d.textContent="ENC ▸ "+hex;const c=$("cipher");
+ c.appendChild(d);while(c.children.length>6)c.removeChild(c.firstChild);},800);
+
+function wcode(c){return c===0?"Clear":c<3?"Fair":c<50?"Cloudy":c<70?"Rain":"Storm";}
+function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`)
+ .then(r=>r.json()).then(j=>{const c=j.current;
+  $("temp").textContent=Math.round(c.temperature_2m)+"°C";$("temp2").textContent=Math.round(c.temperature_2m)+"°C";
+  $("cond").textContent=wcode(c.weather_code);$("hum").textContent=c.relative_humidity_2m+"%";
+  $("pres").textContent=Math.round(c.surface_pressure)+" hPa";}).catch(()=>{});}
+navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
+
+/* ============ CONSOLE + GEMINI ============ */
+function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
+ while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);}
+function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": ";
+ const d=document.createElement("div");$("corelog").appendChild(d);
+ while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);
+ let i=0;const iv=setInterval(()=>{i+=2;d.textContent=pre+t.slice(0,i);if(i>=t.length)clearInterval(iv);},16);}
+function sysPrompt(){const P={butler:"Dry, refined British butler. Polite, understated wit.",
+ snark:"Sarcastic and cutting, but always helpful.",pirate:"Ruthless space pirate. Pepper with 'arr' and nautical slang.",
+ hype:"Over-caffeinated hype man. Pure energy, exclamation points."}[identity.pers];
+ return `You are ${identity.name}, an AI in a Stark Industries HUD. ${P} Address the user as "${identity.user||"sir"}". Replies under 3 sentences.`;}
+async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")||"";if(!key)return null;
+ const body=JSON.stringify({systemInstruction:{parts:[{text:sysPrompt()}]},contents:[{parts:[{text:t}]}]});
+ for(const m of["gemini-2.0-flash","gemini-1.5-flash"]){try{
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`,
+   {method:"POST",headers:{"Content-Type":"application/json"},body});
+  const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
+ return null;}
+function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",
+ snark:"Wow, great question. Shame my Gemini uplink isn't configured. Settings → key.",
+ pirate:"Arr, the crystal ball be dark! Feed me a Gemini key in settings, matey.",
+ hype:"NO KEY NO PROBLEM!! Configure the Gemini uplink and we go AGAIN!!"};
+ if(/time|clock/i.test(t))return `It's ${$("clock").textContent} UTC, ${identity.user||"sir"}.`;
+ if(/weather|temp/i.test(t))return `Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()} outside.`;
+ return F[identity.pers];}
+async function handleCommand(t){log("> "+t);beep(760,.04);
+ const r=await askGemini(t);jarvisSay(r||fallback(t));}
+$("send-btn").onclick=()=>{const t=$("console").value.trim();if(!t)return;$("console").value="";handleCommand(t);};
+$("console").addEventListener("keydown",e=>{if(e.key==="Enter")$("send-btn").click();});
+let rec=null,micOn=false;
+$("mic-btn").onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR)return jarvisSay("Speech recognition unsupported in this browser.");
+ if(!rec){rec=new SR();rec.lang="en-US";
+  rec.onresult=e=>{const t=e.results[0][0].transcript;$("console").value=t;handleCommand(t);};
+  rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
+ if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
+
+/* ============ TARGETING ============ */
+let tgtOn=false,locked=false;
+function setTgt(on){tgtOn=on;$("tgt").classList.toggle("on",on);beep(on?1200:500,.06);}
+$("btn-tgt").onclick=()=>setTgt(!tgtOn);
+window.addEventListener("keydown",e=>{
+ if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
+ if(e.key==="t"||e.key==="T")setTgt(!tgtOn);});
+$("tgt").addEventListener("mousemove",e=>{
+ $("tx").style.left=e.clientX+"px";$("ty").style.top=e.clientY+"px";
+ $("tring").style.left=e.clientX+"px";$("tring").style.top=e.clientY+"px";
+ $("t-x").textContent=String(e.clientX).padStart(4,"0");$("t-y").textContent=String(e.clientY).padStart(4,"0");});
+$("tgt").addEventListener("click",()=>{locked=!locked;
+ $("t-lock").textContent=locked?"HOLD":"--";
+ $("t-range").textContent=locked?(Math.random()*18+2).toFixed(1)+"m":"--";
+ beep(locked?1400:700,.07);});
+
+/* ============ KONAMI ============ */
 const K=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];let ki=0;
-window.addEventListener("keydown",e=>{ki=(e.key===K[ki])?ki+1:(e.key===K[0]?1:0);
- if(ki===K.length){ki=0;document.body.classList.toggle("gold");beep(1200,.15);}});
+window.addEventListener("keydown",e=>{
+ ki=(e.key===K[ki])?ki+1:(e.key===K[0]?1:0);
+ if(ki===K.length){ki=0;document.body.classList.toggle("gold");
+  COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
+  beep(1200,.15);jarvisSay("Mark XLII gold-titanium protocol engaged. Flattering, sir.");}});
+
+log("STARK PROTOCOL — awaiting boot…");
 </script>
 </body>
 </html>
