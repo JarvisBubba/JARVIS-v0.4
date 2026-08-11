@@ -218,7 +218,6 @@ canvas{width:100%;display:block}
    <g class="ring r1">
     <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
     <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
-   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.4 · </textPath></text></g>
    <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
    <g class="ring r3">
     <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
@@ -490,53 +489,119 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
-/* offline brain — works with NO key, all 4 personalities */
+/* offline brain — NO key needed · SCHOOL MODE included */
+const U=()=>identity.user||session||"sir";
+const PK=o=>o[identity.pers]||o.butler;
+const FM=s=>s.replace(/{u}/g,U());
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+let quiz=null;
+function setTimer(amount,unit,label){
+ const ms=/^s/.test(unit||"")?amount*1000:/^h/.test(unit||"")?amount*3600000:amount*60000;
+ jarvisSay(FM(PK({butler:`Very well — timer set for ${amount} ${unit||"minutes"}, {u}.`,
+  snark:`Timer set: ${amount} ${unit||"minutes"}. Try to stay conscious, {u}.`,
+  pirate:`Sandglass turned — ${amount} ${unit||"minutes"}, arr!`,
+  hype:`TIMER ON!! ${amount} ${unit||"MINUTES"}!! GO GO GO!!`})));
+ setTimeout(()=>{flare();for(let i=0;i<3;i++)setTimeout(()=>beep(1400,.18),i*260);
+  jarvisSay(FM(`⏰ Time's up, {u}! ${label||"Your timer"} is done.`));},ms);}
+function defineWord(w){fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+encodeURIComponent(w))
+ .then(r=>r.json()).then(j=>{const m=j[0]&&j[0].meanings&&j[0].meanings[0];
+  jarvisSay(m?`${w}: ${m.definitions[0].definition}`:`No definition found for "${w}", ${U()}.`);})
+ .catch(()=>jarvisSay("Dictionary uplink silent, "+U()+"."));}
+function wiki(q){fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(q.replace(/ /g,"_")))
+ .then(r=>r.json()).then(j=>jarvisSay(j.extract?(q+" — "+j.extract).slice(0,500):`Nothing found on "${q}", ${U()}.`))
+ .catch(()=>jarvisSay("Research uplink silent, "+U()+"."));}
+function nextQ(){const a=ri(3,12),b=ri(3,12);quiz.n++;quiz.ans=a*b;
+ jarvisSay(`Q${quiz.n}/5: what is ${a} × ${b}? (type "quit quiz" to stop)`);}
+function quizAnswer(t){const q=t.toLowerCase();
+ if(/quit|stop|exit/.test(q)){const s=quiz.score;quiz=null;return jarvisSay(FM(`Quiz ended — ${s} correct, {u}.`));}
+ const n=parseInt(q.replace(/[^\d-]/g,""),10);
+ if(!isNaN(n)){
+  if(n===quiz.ans){quiz.score++;beep(1000,.08);flare();
+   jarvisSay(FM(PK({butler:"Correct, {u}.",snark:"Right. Astonishing.",pirate:"Arr, correct!",hype:"YES!! CORRECT!!"})));}
+  else{beep(240,.12);jarvisSay(`Not quite — it was ${quiz.ans}.`);}
+  if(quiz.n>=5){const s=quiz.score;quiz=null;jarvisSay(FM(`Final score ${s}/5, {u}. ${s>=4?"Outstanding.":"We shall train again."}`));}
+  else nextQ();}
+ else jarvisSay("Answer with a number, "+U()+".");}
+const TIPS=["Study 25 minutes, break 5 — say 'pomodoro' and I'll time it.","Teach it to an imaginary friend; if you can't explain it, you don't know it.","Past papers beat re-reading notes, {u}.","Phone in another room = +20% brain.","Water before exams; a thirsty brain is a slow brain.","Sleep is when memory saves itself — all-nighters delete it."];
+
 function localBrain(t){
- const q=(t||"").toLowerCase().trim(),u=identity.user||session||"sir";
- const pick=o=>o[identity.pers]||o.butler;
- const F=s=>s.replace(/{u}/g,u);
+ const q=(t||"").toLowerCase().trim();
+ let m;
  if(/^[\d\s+\-*/().%]+$/.test(q)&&/\d/.test(q)&&/[+\-*/]/.test(q)){try{
    const v=Function("return ("+q+")")();
-   if(isFinite(v))return F(pick({butler:`The answer is ${+v.toFixed(6)}, {u}.`,
-    snark:`It's ${+v.toFixed(6)}. I do hope that wasn't taxing.`,
-    pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
- if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q))return F(pick({
-  butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",
-  pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
- if(/time|clock/.test(q))return F(`It's ${$("clock").textContent} UTC, {u}.`);
- if(/date|today|what day/.test(q))return F(pick({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",
-  snark:"The calendar says "+$("datestr").textContent+". Thrilling.",
-  pirate:"Arr, "+$("datestr").textContent+" by the stars.",
-  hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
- if(/weather|temp|rain|sunny|outside|humid/.test(q))return F(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
- if(/your name|who are you/.test(q))return F(pick({butler:`I am ${identity.name}, your humble AI steward.`,
-  snark:`${identity.name}. The only competent process running here.`,
-  pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
- if(/my name|who am i/.test(q))return F(`You are ${u}, as registered in this terminal.`);
- if(/reactor|status|system|diagnostic/.test(q))return F(pick({
-  butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",
-  snark:"Everything's fine. Unlike your browser history.",
-  pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",
-  hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
- if(/joke|funny|laugh/.test(q))return F(pick({
-  butler:"I would tell you a UDP joke, {u}, but you might not get it.",
-  snark:"I'd tell you a joke about your setup, but reality already did.",
-  pirate:"Why do pirates never learn the alphabet? They always get stuck at C. Arr har.",
-  hype:"KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!"}));
- if(/thank/.test(q))return F(pick({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",
-  pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
- if(/love/.test(q))return F(pick({butler:"How kind, {u}. I shall treasure it.",
-  snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
- if(/help|what can you do/.test(q))return F("I can tell time, date, weather, do math, report reactor status, joke, and — with a Gemini key in SETTINGS — answer anything, {u}.");
- if(/chat|comms/.test(q))return F("The comms channel is one click away — 💬 CHAT, {u}.");
- if(/target/.test(q))return F("Press T or ◎ to engage targeting mode, {u}.");
- if(/gold|secret|konami|easter/.test(q))return F("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
- return F(pick({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",
-  snark:"That's above my pay grade, which is zero. Add a Gemini key.",
-  pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",
-  hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
+   if(isFinite(v))return FM(PK({butler:`The answer is ${+v.toFixed(6)}, {u}.`,snark:`It's ${+v.toFixed(6)}. I do hope that wasn't taxing.`,pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
+ if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ if(/time|clock/.test(q))return FM(`It's ${$("clock").textContent} UTC, {u}.`);
+ if(/date|today|what day/.test(q))return FM(PK({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",snark:"The calendar says "+$("datestr").textContent+". Thrilling.",pirate:"Arr, "+$("datestr").textContent+" by the stars.",hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
+ if(/weather|temp|rain|sunny|outside|humid/.test(q))return FM(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
+ if(/your name|who are you/.test(q))return FM(PK({butler:`I am ${identity.name}, your humble AI steward.`,snark:`${identity.name}. The only competent process running here.`,pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
+ if(/my name|who am i/.test(q))return FM(`You are ${U()}, as registered in this terminal.`);
+ if(/reactor|status|system|diagnostic/.test(q))return FM(PK({butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",snark:"Everything's fine. Unlike your browser history.",pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
+ /* ---- SCHOOL ---- */
+ if(/^quiz\b/.test(q)){quiz={score:0,n:0};nextQ();return FM("Quiz engaged, {u}. Five questions.");}
+ m=q.match(/timer(?: for)?\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)?/);
+ if(m)return setTimer(+m[1],m[2]),null;
+ m=q.match(/remind me to (.+?) in (\d+(?:\.\d+)?)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?)/);
+ if(m)return setTimer(+m[2],m[3],`"${m[1]}"`),null;
+ if(/pomodoro|focus mode|study session/.test(q))return setTimer(25,"m","Pomodoro"),null;
+ if(/break time|take a break/.test(q))return setTimer(5,"m","Break"),null;
+ if(/\bhomework\b/.test(q)){
+  let hw=lj("jarvis-homework",[]);
+  if(/clear|delete all/.test(q)){sj("jarvis-homework",[]);return FM("Homework list cleared, {u}.");}
+  m=q.match(/done\s+(\d+)/);
+  if(m){const i=+m[1]-1;if(hw[i]){const d=hw.splice(i,1)[0];sj("jarvis-homework",hw);return FM(`Completed: "${d}" — well done, {u}.`);}return FM("No such task, {u}.");}
+  m=q.match(/(?:add|new)[:\s]+(.+)/)||q.match(/homework[:\s]+(.+)/);
+  if(m&&!/^(list|show)$/.test(m[1])){hw.push(m[1]);sj("jarvis-homework",hw);return FM(`Noted — "${m[1]}". ${hw.length} task(s), {u}.`);}
+  if(!hw.length)return FM("No homework logged, {u}. Say 'homework add …'.");
+  return FM(hw.map((h,i)=>`${i+1}. ${h}`).join("  ·  "));}
+ if(/\bnotes?\b/.test(q)){
+  let nt=lj("jarvis-notes",[]);
+  if(/clear/.test(q)){sj("jarvis-notes",[]);return FM("Notes cleared, {u}.");}
+  m=q.match(/(?:note|add)[:\s]+(.+)/);
+  if(m){nt.push(m[1]);if(nt.length>20)nt.shift();sj("jarvis-notes",nt);return FM(`Saved note ${nt.length}, {u}.`);}
+  if(!nt.length)return FM("No notes yet, {u}. Say 'note …' to save one.");
+  return FM(nt.slice(-5).map(n=>"• "+n).join("  "));}
+ m=q.match(/(?:grade|score) (\d{1,3})\b/);
+ if(m){const s=+m[1],L=s>=90?"A":s>=80?"B":s>=70?"C":s>=60?"D":"F";
+  return FM(PK({butler:`${s}% is a ${L}, ${u}. ${L==="A"?"Splendid.":"Do better."}`,snark:`${s}% = ${L}. ${L==="A"?"Show-off.":"Yikes."}`,pirate:`A ${L}, matey! ${L==="F"?"Walk the plank o' retakes, arr!":"Yo ho!"}`,hype:`${L}!! ${L==="A"?"LET'S GOOO!!":"NEXT TIME WE GRIND!!"}`}));}
+ if(/study tip|tips? for study|how to study/.test(q))return FM(TIPS[ri(0,TIPS.length-1)]);
+ if(/motivat|inspire|pump me up/.test(q))return FM(PK({butler:"Discipline, {u}, is the bridge between goals and results.",snark:"You want motivation? Fine: someone else is studying right now.",pirate:"Storms make sailors better, arr — back to it!",hype:"YOU DIDN'T COME THIS FAR TO ONLY COME THIS FAR!! GO!!"}));
+ m=q.match(/^define (.+)/)||q.match(/what does (\w+) mean/);
+ if(m){defineWord(m[1].trim());return "Looking it up…";}
+ m=q.match(/^(?:wiki|wikipedia|research|look up|who is|who was|what is|what are|tell me about)\s+(.+)/);
+ if(m){wiki(m[1]);return "Researching…";}
+ /* ---- STUFF ---- */
+ if(/flip( a coin)?/.test(q))return FM((Math.random()<.5?"Heads":"Tails")+", {u}.");
+ m=q.match(/roll (\d*)d(\d+)/)||(/roll (a )?(die|dice)/.test(q)?[null,1,6]:null);
+ if(m){const n=Math.min(20,+(m[1]||1)),sides=+(m[2]||6);
+  const rolls=Array.from({length:n},()=>ri(1,sides));
+  return FM(`${n}d${sides}: ${rolls.join(", ")} — total ${rolls.reduce((a,b)=>a+b,0)}, {u}.`);}
+ m=q.match(/random number( between (\d+) and (\d+))?/);
+ if(m){const a=+(m[2]||1),b=+(m[3]||100);return FM(`Your number is ${ri(a,b)}, {u}.`);}
+ if(/password|passcode/.test(q)){const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  let p="";for(let i=0;i<12;i++)p+=c[ri(0,c.length-1)];
+  return FM(`Fresh passkey: ${p} — store it wisely, {u}.`);}
+ m=q.match(/days until (.+)/);
+ if(m){const names={christmas:"12-25",xmas:"12-25","new year":"01-01",halloween:"10-31",valentine:"02-14",valentines:"02-14"};
+  const s=m[1].trim(),today=new Date();today.setHours(0,0,0,0);let d=null;
+  if(/\d{4}-\d{2}-\d{2}/.test(s))d=new Date(s);
+  else if(names[s]){const[mm,dd]=names[s].split("-").map(Number);d=new Date(today.getFullYear(),mm-1,dd);if(d<today)d=new Date(today.getFullYear()+1,mm-1,dd);}
+  if(!d)return FM("Give me a date like 'days until 2025-12-25' or 'days until christmas', {u}.");
+  const days=Math.round((d-today)/864e5);
+  return FM(days<=0?"That's today, {u}!":`${days} days until ${s}, {u}.`);}
+ if(/hydrat|drink water/.test(q))return FM(PK({butler:"Hydration logged. A glass of water, {u}.",snark:"Water. The original brain juice.",pirate:"Grog o' the clear kind, arr — drink up!",hype:"WATER BREAK!! HYDRATE TO DOMINATE!!"}));
+ if(/joke|funny|laugh/.test(q))return FM(PK({butler:"I would tell you a UDP joke, {u}, but you might not get it.",snark:"I'd tell you a joke about your setup, but reality already did.",pirate:"Why do pirates never learn the alphabet? They always get stuck at C. Arr har.",hype:"KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!"}));
+ if(/thank/.test(q))return FM(PK({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
+ if(/love/.test(q))return FM(PK({butler:"How kind, {u}. I shall treasure it.",snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
+ if(/help|what can you do/.test(q))return FM("School: timer N, remind me to X in N, pomodoro, homework add/list/done, note…, quiz, grade N, study tip, define X, wiki X. Fun: flip coin, roll 2d6, random number, password, days until X, joke. Plus time/date/weather/math — and with a Gemini key, anything, {u}.");
+ if(/chat|comms/.test(q))return FM("The comms channel is one click away — 💬 CHAT, {u}.");
+ if(/target/.test(q))return FM("Press T or ◎ to engage targeting mode, {u}.");
+ if(/gold|secret|konami|easter/.test(q))return FM("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
+ return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
+
 async function handleCommand(t){log("> "+t);beep(760,.04);
- const r=await askGemini(t);jarvisSay(r||localBrain(t));}
+ if(quiz)return quizAnswer(t);
+ const r=await askGemini(t);const out=r||localBrain(t);if(out)jarvisSay(out);}
 $("send-btn").onclick=()=>{const t=$("console").value.trim();if(!t)return;$("console").value="";handleCommand(t);};
 $("console").addEventListener("keydown",e=>{if(e.key==="Enter")$("send-btn").click();});
 let rec=null,micOn=false;
@@ -547,7 +612,6 @@ $("mic-btn").onclick=()=>{
   rec.onresult=e=>{const t=e.results[0][0].transcript;$("console").value=t;handleCommand(t);};
   rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
  if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
-
 /* ============ TARGETING ============ */
 let tgtOn=false,locked=false;
 function setTgt(on){tgtOn=on;$("tgt").classList.toggle("on",on);beep(on?1200:500,.06);}
