@@ -29,6 +29,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;
 #hud{height:100%;display:grid;gap:6px;padding:8px;
  grid-template-columns:290px 1fr 330px;grid-template-rows:52px 1fr 44px;
  grid-template-areas:"top top top" "left center right" "foot foot foot"}
+body.zen #left,body.zen #right,body.zen #foot{display:none}
+body.zen #hud{grid-template-columns:1fr;grid-template-rows:52px 1fr;grid-template-areas:"top" "center"}
 .panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 16px var(--faint);padding:6px 8px;position:relative}
 .panel::before,.panel::after{content:"";position:absolute;width:9px;height:9px;border:0 solid var(--cy);opacity:.9}
 .panel::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
@@ -51,8 +53,9 @@ canvas{width:100%;display:block}
 .badge small{display:block;opacity:.8}
 #top nav{display:flex;gap:6px;align-items:center}
 #left{grid-area:left}#right{grid-area:right}
-#center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-#reactor{width:min(44vh,400px);transition:filter .6s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cy) 45%,transparent))}
+#center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative}
+#sparks{position:absolute;inset:0;pointer-events:none}
+#reactor{width:min(42vh,380px);transition:filter .6s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cy) 45%,transparent))}
 #reactor.flare{filter:drop-shadow(0 0 40px var(--cy)) brightness(1.9)}
 #reactor.talk{filter:drop-shadow(0 0 34px var(--cy)) brightness(1.5)}
 #reactor.low{filter:drop-shadow(0 0 6px var(--dim)) saturate(.5) brightness(.6)}
@@ -68,15 +71,15 @@ canvas{width:100%;display:block}
 #rlabel{text-align:center;letter-spacing:3px;font-size:11px}
 #rlabel b{color:var(--hot)}
 #console-wrap{width:min(94%,600px)}
-#corelog{height:76px;overflow:hidden;opacity:.9;font-size:11px;margin-bottom:5px;line-height:1.45}
+#corelog{height:70px;overflow:hidden;opacity:.9;font-size:11px;margin-bottom:5px;line-height:1.45}
 #crow{display:flex;gap:6px}
 #console{flex:1}
 #sugg{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 #sugg .btn{padding:2px 8px;font-size:10px}
-#clock{font:700 30px Orbitron;letter-spacing:3px;text-shadow:0 0 14px var(--cy)}
+#clock{font:700 28px Orbitron;letter-spacing:3px;text-shadow:0 0 14px var(--cy)}
 .wx{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
-.wx b{font:700 26px Orbitron;text-shadow:0 0 10px var(--cy)}
-#c-list{height:88px;overflow-y:auto;font-size:11px;border:1px solid var(--faint);padding:4px;margin-bottom:4px;scrollbar-width:thin}
+.wx b{font:700 24px Orbitron;text-shadow:0 0 10px var(--cy)}
+#c-list{height:80px;overflow-y:auto;font-size:11px;border:1px solid var(--faint);padding:4px;margin-bottom:4px;scrollbar-width:thin}
 #foot{grid-area:foot;display:flex;align-items:center;justify-content:center;gap:18px}
 #foot::before,#foot::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--dim))}
 #foot::after{background:linear-gradient(90deg,var(--dim),transparent)}
@@ -95,12 +98,16 @@ canvas{width:100%;display:block}
 #tprompt{color:var(--hot);white-space:pre}
 #tin{flex:1;background:transparent;border:none;outline:none;color:var(--hot);font:inherit;caret-color:var(--cy)}
 #tacts{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--dim);padding-top:10px}
-.modal{width:430px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:16px}
+.modal{width:460px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:16px}
 .modal h2{font:700 14px Orbitron;letter-spacing:3px;margin-bottom:10px}
 .frow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
 .frow input,.frow select{width:60%}
 .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .ghint{margin-top:12px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
+#toasts{position:fixed;top:60px;right:12px;z-index:96;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{border:1px solid var(--dim);background:var(--panel);padding:8px 12px;font-size:11px;letter-spacing:1px;box-shadow:0 0 14px var(--faint);animation:tin .3s ease,tout .4s ease 4.6s forwards}
+@keyframes tin{from{transform:translateX(30px);opacity:0}}
+@keyframes tout{to{transform:translateX(30px);opacity:0}}
 #tgt{position:fixed;inset:0;z-index:70;cursor:crosshair;display:none}
 #tgt.on{display:block}
 #tgt .ln{position:absolute;background:var(--dim)}
@@ -115,6 +122,7 @@ canvas{width:100%;display:block}
 </head>
 <body>
 <div id="scan"></div>
+<div id="toasts"></div>
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
 <div id="gate" class="overlay hidden">
@@ -125,6 +133,12 @@ canvas{width:100%;display:block}
  </div>
 </div>
 
+<div id="brief" class="overlay hidden">
+ <div class="modal panel"><h2>MISSION BRIEFING</h2>
+  <div id="brieflog" style="line-height:1.8;white-space:pre-wrap"></div>
+  <div class="row"><button class="btn" id="brief-close">CLOSE</button></div></div>
+</div>
+
 <div id="settings" class="overlay hidden">
  <div class="modal panel">
   <h2>SETTINGS — IDENTITY</h2>
@@ -133,6 +147,7 @@ canvas{width:100%;display:block}
   <div class="frow"><span>Personality</span>
    <select id="set-pers"><option value="butler">Butler</option><option value="snark">Snark</option><option value="pirate">Pirate</option><option value="hype">Hype</option></select></div>
   <div class="frow"><span>Voice replies</span><input type="checkbox" id="set-voice" style="width:auto"></div>
+  <div class="frow"><span>Voice</span><select id="set-tts" style="width:60%"></select></div>
   <div class="frow"><span>Interface sounds</span><input type="checkbox" id="set-sounds" style="width:auto"></div>
   <h2 style="margin-top:14px">SETTINGS — GEMINI UPLINK</h2>
   <div class="frow"><span>API key</span>
@@ -156,6 +171,8 @@ canvas{width:100%;display:block}
   <h2>ADMIN DASHBOARD</h2>
   <div class="frow"><span>ACCESS MODE</span>
    <select id="adm-mode"><option value="everyone">EVERYONE ALLOWED</option><option value="restricted">RESTRICTED</option></select></div>
+  <h2 style="margin-top:10px">BROADCAST (ALL ONLINE)</h2>
+  <div class="row" style="margin:0"><input id="adm-bcast" placeholder="Alert text…"><button class="btn" id="bcast-send">📡 SEND</button></div>
   <h2 style="margin-top:10px">ACCESS REQUESTS</h2><div id="adm-req"></div>
   <h2 style="margin-top:10px">USER CONTROL</h2><div id="adm-users"></div>
   <h2 style="margin-top:10px">ACTIVITY LOG</h2><div id="adm-log"></div>
@@ -169,10 +186,13 @@ canvas{width:100%;display:block}
 <div id="hud">
  <header id="top" class="panel">
   <div class="badge"><div class="avatar"></div>
-   <div><b>J.A.R.V.I.S.</b><small>USER: <span id="badge-user">—</span></small></div></div>
+   <div><b>J.A.R.V.I.S.</b><small>USER: <span id="badge-user">—</span></small><small id="xp">—</small></div></div>
   <div>⚠ STARK PROTOCOL · CORE: <b id="corestate">ONLINE</b> · UPLINK: <b id="uplinkstate">OFFLINE</b> · <span id="utcmini">--:--:--</span> UTC</div>
   <nav>
+   <button class="btn" id="btn-brief" title="Briefing">📋</button>
+   <button class="btn" id="btn-conv" title="Conversation mode">🗨</button>
    <button class="btn" id="btn-wake" title="Wake word">🎙</button>
+   <button class="btn" id="btn-zen" title="Zen [F]">🧘</button>
    <button class="btn" id="btn-theme" title="Theme">🎨</button>
    <button class="btn" id="btn-tgt" title="Targeting [T]">◎</button>
    <button class="btn" id="btn-snd">🔊</button>
@@ -183,18 +203,26 @@ canvas{width:100%;display:block}
  </header>
 
  <aside id="left" class="col">
+  <section class="panel"><h3>OPERATOR PROFILE</h3>
+   <div class="kv"><span>RANK</span><b id="pr-rank">—</b></div>
+   <div class="kv"><span>XP</span><b id="pr-xp">0</b></div>
+   <div class="kv"><span>LOGIN STREAK</span><b id="pr-ls">0🔥</b></div>
+   <div class="kv"><span>STUDY STREAK</span><b id="pr-ss">0🔥</b></div>
+   <div class="kv"><span>FOCUS TOTAL</span><b id="pr-f">0</b></div>
+   <div class="kv"><span>WATER TODAY</span><b id="pr-w">0</b></div></section>
   <section class="panel"><h3>CORE OUTPUT</h3>
    <div class="kv"><span>CORE %</span><b>98</b></div>
    <div class="kv"><span>THRUSTERS</span><b>STBY</b></div>
    <div class="kv"><span>AUX SYSTEMS</span><b>OK</b></div></section>
-  <section class="panel"><h3>DATA BUS</h3><canvas id="g-bus" width="270" height="52"></canvas></section>
-  <section class="panel"><h3>PROXIMITY SCAN</h3><canvas id="radar" width="270" height="150"></canvas>
+  <section class="panel"><h3>DATA BUS</h3><canvas id="g-bus" width="270" height="46"></canvas></section>
+  <section class="panel"><h3>PROXIMITY SCAN</h3><canvas id="radar" width="270" height="140"></canvas>
    <div class="kv"><span>CONTACTS</span><b>2</b></div>
    <div class="kv"><span>THREAT</span><b>NONE</b></div></section>
-  <section class="panel"><h3>CIPHER FEED</h3><div id="cipher" style="font-size:10px;line-height:1.6;opacity:.8;height:80px;overflow:hidden"></div></section>
+  <section class="panel"><h3>CIPHER FEED</h3><div id="cipher" style="font-size:10px;line-height:1.6;opacity:.8;height:70px;overflow:hidden"></div></section>
  </aside>
 
  <main id="center">
+  <canvas id="sparks"></canvas>
   <svg id="reactor" viewBox="0 0 400 400">
    <defs><filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
     <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -202,7 +230,7 @@ canvas{width:100%;display:block}
    <g class="ring r1">
     <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
     <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
-   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.5 · </textPath></text></g>
+   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.6 · </textPath></text></g>
    <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
    <g class="ring r3">
     <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
@@ -216,7 +244,7 @@ canvas{width:100%;display:block}
   <div id="console-wrap" class="panel">
    <h3>COMMAND CONSOLE</h3>
    <div id="corelog"></div>
-   <div id="crow"><input id="console" placeholder="Ask JARVIS… (Tab = autocomplete, ↑ = history)" autocomplete="off">
+   <div id="crow"><input id="console" placeholder="Ask JARVIS… (Tab=autocomplete ↑=history)" autocomplete="off">
     <button class="btn" id="send-btn">SEND</button><button class="btn" id="mic-btn">🎤</button></div>
    <div id="sugg"></div>
   </div>
@@ -229,16 +257,17 @@ canvas{width:100%;display:block}
   <section class="panel"><h3>ENVIRONMENT</h3>
    <div class="wx"><b id="temp">--°C</b><span id="cond">—</span></div>
    <div class="kv"><span>HUMIDITY</span><b id="hum">—</b></div>
-   <div class="kv"><span>PRESSURE</span><b id="pres">—</b></div></section>
+   <div class="kv"><span>RAIN 6H</span><b id="rain">—</b></div></section>
   <section class="panel"><h3>COMMS · ONLINE: <span id="c-on" style="animation:none">1</span></h3>
    <div id="c-list"></div>
-   <div class="row" style="margin:0 0 4px"><input id="c-name" placeholder="CALLSIGN" style="width:45%"><input id="c-chan" placeholder="CHANNEL" style="width:55%"></div>
+   <div class="kv"><span>ONLINE</span><b id="c-who">you</b></div>
+   <div class="row" style="margin:4px 0 4px"><input id="c-name" placeholder="CALLSIGN" style="width:45%"><input id="c-chan" placeholder="CHANNEL" style="width:55%"></div>
    <div class="row" style="margin:0"><input id="c-text" placeholder="Transmit…"><button class="btn" id="c-send">TX</button></div></section>
   <section class="panel"><h3>UPLINK ARRAY</h3>
    <div class="kv"><span>SAT-7</span><b>LINKED</b></div>
    <div class="kv"><span>ENCRYPT</span><b>AES-256</b></div>
    <div class="kv"><span>PACKETS</span><b id="pkt">0</b></div>
-   <canvas id="g-up" width="300" height="40"></canvas></section>
+   <canvas id="g-up" width="300" height="36"></canvas></section>
  </aside>
 
  <footer id="foot"><span>STARK INDUSTRIES</span></footer>
@@ -256,29 +285,55 @@ let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0f
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
 let skip=false;
 
+/* toasts */
+function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;
+ $("toasts").appendChild(d);setTimeout(()=>d.remove(),5000);}
+
 /* sound */
 let AC=null;
 function beep(f=880,d=.06,type="square",g=.05){
  if(!identity.sounds)return;
- try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+ try{AC=AC||new (window.AudioContext||window.webkitAudioContext());
   const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f;ga.gain.value=g;
   o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+let convOn=false,frec=null;
 function speak(t){
  if(!identity.voice||!("speechSynthesis" in window))return;
  const u=new SpeechSynthesisUtterance(t.replace(/[*_`#]/g,""));u.rate=1.02;u.pitch=.9;
- const v=speechSynthesis.getVoices().find(v=>/en-GB/i.test(v.lang));if(v)u.voice=v;
+ const pref=localStorage.getItem("jarvis-tts-voice");
+ const v=speechSynthesis.getVoices().find(x=>x.name===pref)||speechSynthesis.getVoices().find(x=>/en-GB/i.test(x.lang));
+ if(v)u.voice=v;
  u.onstart=()=>$("reactor").classList.add("talk");
- u.onend=u.onerror=()=>$("reactor").classList.remove("talk");
+ u.onend=u.onerror=()=>{$("reactor").classList.remove("talk");if(convOn)followListen();};
  speechSynthesis.speak(u);}
-function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);}
+function followListen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;
+ try{frec=new SR();frec.lang="en-US";
+  const to=setTimeout(()=>{try{frec.stop();}catch(e){}},12000);
+  frec.onresult=e=>{clearTimeout(to);handleCommand(e.results[0][0].transcript);};
+  frec.onend=()=>clearTimeout(to);
+  frec.start();}catch(e){}}
+let onFlare=null;
+function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);if(onFlare)onFlare();}
 
-/* battery-aware reactor */
+/* reactor particles */
+const sp=$("sparks"),sx=sp.getContext("2d");let PART=[];
+function sizeSparks(){sp.width=sp.clientWidth||600;sp.height=sp.clientHeight||400;}
+window.addEventListener("resize",sizeSparks);sizeSparks();
+function burst(n=24){for(let i=0;i<n;i++)PART.push({x:sp.width/2,y:sp.height/2,a:Math.random()*6.28,v:1+Math.random()*3,l:1});}
+onFlare=()=>burst(24);
+(function loop(){sx.clearRect(0,0,sp.width,sp.height);
+ PART=PART.filter(p=>p.l>0);
+ PART.forEach(p=>{p.x+=Math.cos(p.a)*p.v;p.y+=Math.sin(p.a)*p.v;p.l-=.02;
+  sx.globalAlpha=Math.max(0,p.l);sx.fillStyle=COL;sx.fillRect(p.x,p.y,2,2);});
+ sx.globalAlpha=1;requestAnimationFrame(loop);})();
+
+/* battery */
 if(navigator.getBattery)navigator.getBattery().then(b=>{
  const upd=()=>$("reactor").classList.toggle("low",b.level<.25&&!b.charging);
  upd();b.addEventListener("levelchange",upd);b.addEventListener("chargingchange",upd);}).catch(()=>{});
 
 /* ============ BOOT ============ */
-const bootLines=["STARK INDUSTRIES UNIFIED OS v0.5.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
+const bootLines=["STARK INDUSTRIES UNIFIED OS v0.6.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
 "NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
 "BOOT COMPLETE — WAKE UP, SIR."];
@@ -310,10 +365,8 @@ Object.keys(users).forEach(n=>{users[n].role=isAdmin(n)?"admin":"user";});
 sj("jarvis-users",users);
 let session=localStorage.getItem("jarvis-session")||"";
 const MODE=()=>localStorage.getItem("jarvis-access-mode")||"everyone";
-
 function alog(ev){const L=lj("jarvis-log",[]);L.push({t:new Date().toISOString().slice(0,16).replace("T"," "),e:ev});
  if(L.length>60)L.shift();sj("jarvis-log",L);}
-
 function tscroll(){$("tlog").scrollTop=$("tlog").scrollHeight;}
 function tline(text,cls){const d=document.createElement("div");if(cls)d.className=cls;
  d.textContent=text;$("tlog").appendChild(d);tscroll();return d;}
@@ -333,7 +386,6 @@ function tactions(list){$("tacts").innerHTML="";$("tacts").classList.remove("hid
  list.forEach(([l,f],i)=>{const b=document.createElement("button");b.className="btn"+(i===0?" hot":"");b.textContent=l;
   b.onclick=()=>{beep(700,.04);f();};$("tacts").appendChild(b);});}
 function shakeTerm(){const t=$("term");t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");}
-
 function checkGate(){
  if(session&&users[session])return unlock();
  $("gate").classList.remove("hidden");
@@ -403,6 +455,7 @@ function pendingView(){
   if(r.status==="approved"){clearInterval(pollTimer);pollTimer=null;
    localStorage.removeItem("jarvis-pending-name");
    session=n;localStorage.setItem("jarvis-session",n);
+   toast("✔ ACCESS APPROVED");
    ttype(`> ACCESS GRANTED — WELCOME, ${n.toUpperCase()}`,"ok").then(()=>{isAdmin(n)?adminChoice():unlock();});}
   if(r.status==="denied"){clearInterval(pollTimer);pollTimer=null;deniedView();}},2000);}
 function deniedView(){
@@ -421,6 +474,7 @@ function unlock(){
  $("reactor-state").textContent="ONLINE";
  if(isAdmin(session))$("btn-admin").classList.remove("hidden");
  alog("signin "+session);
+ bumpLogin();renderProfile();
  flare();
  const h=new Date().getHours(),part=h<12?"morning":h<18?"afternoon":"evening";
  jarvisSay(`All systems online. Good ${part}, ${identity.user||session||"sir"}.`);
@@ -430,6 +484,9 @@ function unlock(){
 $("btn-admin").onclick=openAdmin;
 $("adm-close").onclick=()=>$("admin").classList.add("hidden");
 $("adm-mode").onchange=e=>{localStorage.setItem("jarvis-access-mode",e.target.value);beep(600,.05);};
+$("bcast-send").onclick=()=>{const t=$("adm-bcast").value.trim();if(!t)return;
+ if(window.mPublish)window.mPublish("jarvis-site-broadcast",JSON.stringify({from:session,text:t}));
+ $("adm-bcast").value="";toast("📡 Broadcast sent");beep(900,.08);};
 function renderAdmin(){
  $("adm-mode").value=MODE();
  const reqs=lj("jarvis-requests",[]);$("adm-req").innerHTML="";
@@ -492,7 +549,12 @@ $("btn-snd").onclick=()=>{identity.sounds=!identity.sounds;sj("jarvis-identity",
 function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"";}
 syncSnd();
 if(localStorage.getItem("jarvis-gemini-key"))$("uplinkstate").textContent="ONLINE";
-
+/* voice picker */
+function fillVoices(){const vs=speechSynthesis.getVoices();const sel=$("set-tts");
+ sel.innerHTML='<option value="">Auto (British butler)</option>'+vs.map(v=>`<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+ sel.value=localStorage.getItem("jarvis-tts-voice")||"";}
+if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=fillVoices;fillVoices();}
+$("set-tts").onchange=e=>localStorage.setItem("jarvis-tts-voice",e.target.value);
 /* theme picker */
 const THEMES=["cyan","gold","crimson","green"];
 $("btn-theme").onclick=()=>{
@@ -500,14 +562,41 @@ $("btn-theme").onclick=()=>{
  const nx=THEMES[(THEMES.indexOf(cur)+1)%THEMES.length];
  document.body.dataset.theme=nx;localStorage.setItem("jarvis-theme",nx);
  COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
- beep(880,.06);};
+ toast("🎨 Theme: "+nx);beep(880,.06);};
+/* zen mode */
+function setZen(on){document.body.classList.toggle("zen",on);toast(on?"🧘 Zen mode — distractions hidden":"Zen off");beep(on?500:700,.06);}
+$("btn-zen").onclick=()=>setZen(!document.body.classList.contains("zen"));
+
+/* ============ 0.6: XP / RANKS / STREAKS / PROFILE ============ */
+const RANKS=["Cadet","Ensign","Engineer","Specialist","Commander","Director","Stark Protégé"];
+const lvl=x=>Math.floor(Math.sqrt(x/100));
+const rankOf=x=>RANKS[Math.min(lvl(x),RANKS.length-1)];
+let streak=lj("jarvis-streak",{last:"",login:0,study:0,lastStudy:""});
+function bumpLogin(){const today=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
+ if(streak.last===today)return;
+ streak.login=streak.last===y?streak.login+1:1;streak.last=today;sj("jarvis-streak",streak);}
+function bumpStudy(){const today=new Date().toDateString(),y=new Date(Date.now()-864e5).toDateString();
+ if(streak.lastStudy===today)return;
+ streak.study=streak.lastStudy===y?streak.study+1:1;streak.lastStudy=today;sj("jarvis-streak",streak);}
+function addXP(n){const M=lj("jarvis-xp",{});const old=M[session]||0;M[session]=old+n;sj("jarvis-xp",M);
+ if(lvl(M[session])>lvl(old)){const r=rankOf(M[session]);
+  toast("⬆ PROMOTED: "+r);flare();beep(1300,.2);
+  jarvisSay(FM(`Promotion confirmed, {u}: ${r}. Keep it up.`));}
+ renderProfile();}
+function renderProfile(){
+ const M=lj("jarvis-xp",{}),x=M[session]||0;
+ $("xp").textContent=`LV ${lvl(x)} · ${rankOf(x).toUpperCase()}`;
+ $("pr-rank").textContent=rankOf(x);$("pr-xp").textContent=x;
+ $("pr-ls").textContent=streak.login+"🔥";$("pr-ss").textContent=streak.study+"🔥";
+ $("pr-f").textContent=Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0);
+ const t=new Date().toDateString();
+ $("pr-w").textContent=lj("jarvis-water",[]).filter(w=>new Date(w.date).toDateString()===t).length;}
 
 /* ============ TELEMETRY ============ */
 setInterval(()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
  const t=p(d.getUTCHours())+":"+p(d.getUTCMinutes())+":"+p(d.getUTCSeconds());
  $("clock").textContent=t;$("utcmini").textContent=t;
  $("datestr").textContent=d.toUTCString().slice(0,16).toUpperCase();},1000);
-
 function lineGraph(id){const cv=$(id),x=cv.getContext("2d"),N=72,
  d=Array.from({length:N},()=>.3+Math.random()*.4);
  return()=>{d.push(Math.min(.95,Math.max(.05,d[d.length-1]+(Math.random()-.5)*.25)));d.shift();
@@ -542,14 +631,21 @@ setInterval(()=>{const hex=Array.from({length:4},()=>Math.floor(Math.random()*65
  const d=document.createElement("div");d.textContent="ENC ▸ "+hex;const c=$("cipher");
  c.appendChild(d);while(c.children.length>6)c.removeChild(c.firstChild);},800);
 function wcode(c){return c===0?"Clear":c<3?"Fair":c<50?"Cloudy":c<70?"Rain":"Storm";}
-function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`)
+window._fc={rain:0};
+function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m&hourly=precipitation_probability&forecast_days=1&timezone=auto`)
  .then(r=>r.json()).then(j=>{const c=j.current;
   $("temp").textContent=Math.round(c.temperature_2m)+"°C";
   $("cond").textContent=wcode(c.weather_code);$("hum").textContent=c.relative_humidity_2m+"%";
-  $("pres").textContent=Math.round(c.surface_pressure)+" hPa";}).catch(()=>{});}
+  if(j.hourly&&j.hourly.precipitation_probability){
+   const h=new Date().getHours();
+   const slice=j.hourly.precipitation_probability.slice(h,h+6);
+   const mx=Math.max(...slice.filter(x=>x!=null),0);
+   window._fc={rain:mx};
+   $("rain").textContent=mx+"%"+(mx>=50?" ☂":"");}
+ }).catch(()=>{});}
 navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
 
-/* ============ SCHOOL: SCHEDULE + BELLS ============ */
+/* ============ SCHEDULE + BELLS ============ */
 const schedGet=()=>lj("jarvis-schedule",[]);
 let lastBell="";
 setInterval(()=>{const S=schedGet();const d=new Date();
@@ -560,26 +656,25 @@ setInterval(()=>{const S=schedGet();const d=new Date();
  if(nx){const[h,mi]=nx.s.split(":").map(Number);
   const diff=(h*60+mi)-(d.getHours()*60+d.getMinutes());
   if(diff===5&&lastBell!==nx.s+d.toDateString()){lastBell=nx.s+d.toDateString();
-   beep(900,.1);jarvisSay(FM(`Heads up, {u}: ${nx.n} starts in 5 minutes.`));}}},30000);
+   beep(900,.1);toast("🔔 "+nx.n+" in 5 minutes");
+   jarvisSay(FM(`Heads up, {u}: ${nx.n} starts in 5 minutes.`));}}},30000);
 
-/* ============ 100+ COMMANDS, 20+ FUNCTIONS, 0.5 UPGRADES ============ */
+/* ============ BRAIN HELPERS ============ */
 const U=()=>identity.user||session||"sir";
 const PK=o=>o[identity.pers]||o.butler;
 const FM=s=>s.replace(/{u}/g,U());
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 let quiz=null,triviaGame=null,fcIdx=null;
-
 function lev(a,b){const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;
  const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=0;j<=n;j++)d[0][j]=j;
  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]!==b[j-1]?1:0));
  return d[m][n];}
-const FUZZ=["homework","timer","flashcard","schedule","password","weather","trivia","pomodoro","expense","convert","define","wiki","quote","joke","riddle","open","search","pictures","random","focus","remember","motivate","recipe","sleep","water","grade","gpa","theme"];
+const FUZZ=["homework","timer","flashcard","schedule","password","weather","trivia","pomodoro","expense","convert","define","wiki","quote","joke","riddle","open","search","pictures","random","focus","remember","motivate","recipe","sleep","water","grade","gpa","theme","briefing","forecast","alias","zen"];
 function fuzzy(t){const words=t.split(" ");
  for(const k of FUZZ)for(let i=0;i<words.length;i++){
   const w=words[i].toLowerCase();if(w.length<4)continue;
   if(w!==k&&lev(w,k)<=1)words[i]=k;}
  return words.join(" ");}
-
 function setTimer(amount,unit,label){
  const ms=/^s/.test(unit||"")?amount*1000:/^h/.test(unit||"")?amount*3600000:amount*60000;
  jarvisSay(FM(PK({butler:`Timer set for ${amount} ${unit||"minutes"}, {u}.`,
@@ -587,8 +682,9 @@ function setTimer(amount,unit,label){
   pirate:`Sandglass turned — ${amount} ${unit||"minutes"}, arr!`,
   hype:`TIMER ON!! ${amount} ${unit||"MINUTES"}!! GO GO GO!!`})));
  setTimeout(()=>{flare();for(let i=0;i<3;i++)setTimeout(()=>beep(1400,.18),i*260);
+  toast("⏰ "+(label||"Timer")+" done");
   if(label==="Pomodoro"){const F=lj("jarvis-focus",{});const k=new Date().toDateString();
-   F[k]=(F[k]||0)+1;sj("jarvis-focus",F);}
+   F[k]=(F[k]||0)+1;sj("jarvis-focus",F);addXP(20);bumpStudy();renderProfile();}
   jarvisSay(FM(`⏰ Time's up, {u}! ${label||"Your timer"} is done.`));},ms);}
 function defineWord(w){fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+encodeURIComponent(w))
  .then(r=>r.json()).then(j=>{const m=j[0]&&j[0].meanings&&j[0].meanings[0];
@@ -661,12 +757,35 @@ function webLaunch(t){
   return{url:"https://www.google.com/search?q="+encodeURIComponent(s),say:`Popping the search for "${s}", {u}.`};}
  return null;}
 
+/* briefing */
+function briefing(){
+ const S=schedGet();const d=new Date();
+ const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+ const cur=S.find(p=>now>=p.s&&now<p.e),nx=S.find(p=>p.s>now);
+ const rain=window._fc.rain||0;
+ const lines=[
+  "▸ DATE: "+$("datestr").textContent,
+  `▸ WEATHER: ${$("temp").textContent}, ${$("cond").textContent}. Rain next 6h: ${rain}%.${rain>=50?" BRING AN UMBRELLA ☂":""}`,
+  "▸ CLASSES: "+(cur?`now ${cur.n} until ${cur.e}`:nx?`next ${nx.n} at ${nx.s}`:"none logged"),
+  `▸ HOMEWORK: ${lj("jarvis-homework",[]).length} task(s) · FOCUS TODAY: ${lj("jarvis-focus",{})[d.toDateString()]||0}`,
+  `▸ STREAKS: login ${streak.login}🔥 · study ${streak.study}🔥 · RANK: ${rankOf(lj("jarvis-xp",{})[session]||0)}`,
+  `▸ "${generateQuote()}"`];
+ $("brieflog").innerHTML="";$("brief").classList.remove("hidden");
+ lines.forEach((L,i)=>setTimeout(()=>{const dv=document.createElement("div");dv.textContent=L;
+  $("brieflog").appendChild(dv);beep(600+i*80,.03);},i*250));
+ jarvisSay(FM("Briefing on screen, {u}. Rain chance "+rain+"%"+(rain>=50?" — take an umbrella.":".")));}
+$("btn-brief").onclick=briefing;
+$("brief-close").onclick=()=>$("brief").classList.add("hidden");
+/* conversation mode */
+$("btn-conv").onclick=()=>{convOn=!convOn;$("btn-conv").classList.toggle("hot",convOn);
+ jarvisSay(FM(convOn?"Conversation mode on — I'll listen for 12 seconds after each reply, {u}.":"Conversation mode off, {u}."));};
+
 const TIPS=["Study 25 minutes, break 5 — say 'pomodoro'.","Teach it to an imaginary friend.","Past papers beat re-reading notes.","Phone in another room = +20% brain.","Water before exams.","Sleep is when memory saves itself."];
 const JOKES={butler:["I would tell you a UDP joke, but you might not get it.","There are 10 types of people: those who understand binary, and those who don't."],
  snark:["I'd tell you a joke about your setup, but reality already did.","Why did the programmer quit? He didn't get arrays."],
  pirate:["Why do pirates never learn the alphabet? They always get stuck at C. Arr har.","What's a pirate's favorite letter? R... but me first love be the C!"],
  hype:["KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!","Why did the code go to therapy? Too many unresolved promises!!"]};
-const CMDS=["help","homework add","homework","homework done","notes","note","quiz","flashcard add","flashcard quiz","flashcard stats","gpa","grade","timer","remind me to","pomodoro","break time","study tip","focus stats","motivate me","convert","count words","reading time","bmi","age","tip","password","recipe","expense","expenses","loan","time in","binary","color","water","sleep","define","wiki","quote","fact","trivia","riddle","movie","book","music","game","flip","roll","random number","days until","open","search","pictures","joke","good morning","good night","schedule add","schedule","remember","what do you remember","forget","theme cyan","theme gold","theme crimson","theme green","stats","version","about"];
+const CMDS=["help","briefing","forecast","homework add","homework","homework done","notes","note","quiz","flashcard add","flashcard quiz","flashcard stats","gpa","grade","timer","remind me to","pomodoro","break time","study tip","focus stats","motivate me","convert","count words","reading time","bmi","age","tip","password","recipe","expense","expenses","loan","time in","binary","color","water","sleep","define","wiki","quote","fact","trivia","riddle","movie","book","music","game","flip","roll","random number","days until","open","search","pictures","joke","good morning","good night","schedule add","schedule","remember","what do you remember","forget","alias","aliases","unalias","zen","theme cyan","theme gold","theme crimson","theme green","stats","version","about"];
 
 function nextQ(){const a=ri(3,12),b=ri(3,12);quiz.n++;quiz.ans=a*b;
  jarvisSay(`Q${quiz.n}/5: what is ${a} × ${b}? (type "quit quiz" to stop)`);}
@@ -674,7 +793,7 @@ function quizAnswer(t){const q=t.toLowerCase();
  if(/quit|stop|exit/.test(q)){const s=quiz.score;quiz=null;return jarvisSay(FM(`Quiz ended — ${s} correct, {u}.`));}
  const n=parseInt(q.replace(/[^\d-]/g,""),10);
  if(!isNaN(n)){
-  if(n===quiz.ans){quiz.score++;beep(1000,.08);flare();jarvisSay(FM(PK({butler:"Correct, {u}.",snark:"Right. Astonishing.",pirate:"Arr, correct!",hype:"YES!! CORRECT!!"})));}
+  if(n===quiz.ans){quiz.score++;addXP(10);beep(1000,.08);flare();jarvisSay(FM(PK({butler:"Correct, {u}.",snark:"Right. Astonishing.",pirate:"Arr, correct!",hype:"YES!! CORRECT!!"})));}
   else{beep(240,.12);jarvisSay(`Not quite — it was ${quiz.ans}.`);}
   if(quiz.n>=5){const s=quiz.score;quiz=null;jarvisSay(FM(`Final score ${s}/5, {u}. ${s>=4?"Outstanding.":"We shall train again."}`));}
   else nextQ();}
@@ -682,37 +801,44 @@ function quizAnswer(t){const q=t.toLowerCase();
 
 function localBrain(t){
  const q=(t||"").toLowerCase().trim();let m;
- /* flashcard answer mode (Leitner) */
  if(fcIdx!==null){
   const cards=lj("jarvis-flashcards",[]);const c=cards[fcIdx];fcIdx=null;
   if(c){const ok=q.includes(c.a.toLowerCase());
    c.box=ok?Math.min(5,c.box+1):1;sj("jarvis-flashcards",cards);
+   if(ok)addXP(5);
    return ok?FM(`Correct, {u} — card promoted to box ${c.box}.`):`Not quite — "${c.a}". Card back to box 1, {u}.`;}
  }
  if(/^[\d\s+\-*/().%]+$/.test(q)&&/\d/.test(q)&&/[+\-*/]/.test(q)){try{
    const v=Function("return ("+q+")")();
    if(isFinite(v))return FM(PK({butler:`The answer is ${+v.toFixed(6)}, {u}.`,snark:`It's ${+v.toFixed(6)}.`,pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
- if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q)&&!/routine/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
- /* routines */
- if(/good morning|morning routine/.test(q)){
-  const S=schedGet();const d=new Date();const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  const nx=S.find(p=>p.s>now);
-  jarvisSay(FM(`Good morning, {u}. Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}. ${nx?`First period: ${nx.n} at ${nx.s}.`:"No classes logged."} ${TIPS[ri(0,TIPS.length-1)]}`));
-  return null;}
+ if(/^(hi|hello|hey|yo)\b/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ if(/good morning|morning routine/.test(q)){briefing();return null;}
  if(/good night|night routine/.test(q)){
   const hw=lj("jarvis-homework",[]).length;const f=lj("jarvis-focus",{})[new Date().toDateString()]||0;
   jarvisSay(FM(`Good night, {u}. ${f} focus session(s) today, ${hw} homework task(s) left. Sleep well — memory saves itself during sleep.`));
   return null;}
+ if(/briefing|brief/.test(q)){briefing();return null;}
+ if(/forecast|umbrella/.test(q)){const r=window._fc.rain||0;
+  return FM(`Next 6 hours: max rain chance ${r}%. ${r>=50?"Bring an umbrella, {u}.":"You're safe without one, {u}."}`);}
+ if(/^zen/.test(q)){setZen(!document.body.classList.contains("zen"));return null;}
+ /* aliases */
+ m=q.match(/^alias (\w+) = (.+)/);
+ if(m){const A=lj("jarvis-aliases",{});A[m[1]]=m[2];sj("jarvis-aliases",A);
+  return FM(`Alias learned: "${m[1]}" → "${m[2]}", {u}.`);}
+ if(/^unalias (\w+)/.test(q)){const A=lj("jarvis-aliases",{});delete A[q.match(/^unalias (\w+)/)[1]];sj("jarvis-aliases",A);
+  return FM("Alias removed, {u}.");}
+ if(/^aliases$/.test(q)){const A=lj("jarvis-aliases",{});const ks=Object.keys(A);
+  if(!ks.length)return FM("No aliases yet, {u}. Say 'alias gym = open youtube search workout'.");
+  return FM(ks.map(k=>`${k} → ${A[k]}`).join(" · "));}
  m=q.match(/^(?:what time is it in|time in)\s+(.+)/);
  if(m){const tz=convertTimezone(new Date().toISOString(),m[1]);
   if(tz)return FM(`Time in ${m[1]}: ${tz}, {u}.`);return FM("Timezone not recognized, {u}.");}
  if(/\btime\b|\bclock\b/.test(q))return FM(`It's ${$("clock").textContent} UTC, {u}.`);
  if(/date|today|what day/.test(q))return FM(PK({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",snark:"The calendar says "+$("datestr").textContent+". Thrilling.",pirate:"Arr, "+$("datestr").textContent+" by the stars.",hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
- if(/weather|temp|rain|sunny|outside|humid/.test(q))return FM(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
+ if(/weather|temp|rain|sunny|outside|humid/.test(q))return FM(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, rain chance ${window._fc.rain||0}%, {u}.`);
  if(/your name|who are you/.test(q))return FM(PK({butler:`I am ${identity.name}, your humble AI steward.`,snark:`${identity.name}. The only competent process running here.`,pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
- if(/my name|who am i/.test(q))return FM(`You are ${U()}, as registered in this terminal.`);
+ if(/my name|who am i/.test(q))return FM(`You are ${U()}, rank ${rankOf(lj("jarvis-xp",{})[session]||0)}, as registered in this terminal.`);
  if(/reactor|status|system|diagnostic/.test(q))return FM(PK({butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",snark:"Everything's fine. Unlike your browser history.",pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
- /* memory */
  m=q.match(/^remember (?:that )?(.+?) (?:is|=) (.+)/);
  if(m){const M=lj("jarvis-memory",{});M[m[1].trim()]=m[2].trim();sj("jarvis-memory",M);
   return FM(`Stored in memory: ${m[1]} is ${m[2]}, {u}.`);}
@@ -724,7 +850,6 @@ function localBrain(t){
   return FM(ks.map(k=>`${k}: ${M[k]}`).join(" · "));}
  m=q.match(/^forget (.+)/);
  if(m){const M=lj("jarvis-memory",{});delete M[m[1].trim()];sj("jarvis-memory",M);return FM(`Forgot "${m[1]}", {u}.`);}
- /* school */
  if(/^quiz\b/.test(q)){quiz={score:0,n:0};nextQ();return FM("Quiz engaged, {u}. Five questions.");}
  m=q.match(/timer(?: for)?\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)?/);
  if(m)return setTimer(+m[1],m[2]),null;
@@ -735,12 +860,12 @@ function localBrain(t){
  if(/focus stats|study stats/.test(q)){const F=lj("jarvis-focus",{});const out=[];
   for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);const c=F[d.toDateString()]||0;
    out.push(d.toLocaleDateString("en",{weekday:"short"})+" "+"█".repeat(c)+(c||"·"));}
-  return FM("Last 7 days: "+out.join(" "),{u}?"":undefined)||FM("Last 7 days: "+out.join(" "));}
+  return FM("Last 7 days: "+out.join(" "));}
  if(/\bhomework\b/.test(q)){
   let hw=lj("jarvis-homework",[]);
   if(/clear|delete all/.test(q)){sj("jarvis-homework",[]);return FM("Homework list cleared, {u}.");}
   m=q.match(/done\s+(\d+)/);
-  if(m){const i=+m[1]-1;if(hw[i]){const d=hw.splice(i,1)[0];sj("jarvis-homework",hw);return FM(`Completed: "${d}" — well done, {u}.`);}return FM("No such task, {u}.");}
+  if(m){const i=+m[1]-1;if(hw[i]){const d=hw.splice(i,1)[0];sj("jarvis-homework",hw);addXP(10);renderProfile();return FM(`Completed: "${d}" — well done, {u}. +10 XP`);}return FM("No such task, {u}.");}
   m=q.match(/(?:add|new)[:\s]+(.+)/)||q.match(/homework[:\s]+(.+)/);
   if(m&&!/^(list|show)$/.test(m[1])){hw.push(m[1]);sj("jarvis-homework",hw);return FM(`Noted — "${m[1]}". ${hw.length} task(s), {u}.`);}
   if(!hw.length)return FM("No homework logged, {u}. Say 'homework add …'.");
@@ -757,7 +882,6 @@ function localBrain(t){
   return FM(PK({butler:`${s}% is a ${L}, {u}.`,snark:`${s}% = ${L}.`,pirate:`A ${L}, matey!`,hype:`${L}!!`}));}
  if(/study tip|tips? for study|how to study/.test(q))return FM(TIPS[ri(0,TIPS.length-1)]);
  if(/motivat|inspire|pump me up/.test(q))return FM(PK({butler:"Discipline, {u}, is the bridge between goals and results.",snark:"You want motivation? Fine: someone else is studying right now.",pirate:"Storms make sailors better, arr — back to it!",hype:"YOU DIDN'T COME THIS FAR TO ONLY COME THIS FAR!! GO!!"}));
- /* schedule */
  m=q.match(/schedule add (\d{1,2}:\d{2}) (\d{1,2}:\d{2}) (.+)/);
  if(m){const S=schedGet();S.push({s:m[1],e:m[2],n:m[3]});S.sort((a,b)=>a.s<b.s?-1:1);sj("jarvis-schedule",S);
   return FM(`Period added: ${m[3]} ${m[1]}–${m[2]}, {u}.`);}
@@ -765,20 +889,19 @@ function localBrain(t){
  if(/^schedule$|my schedule|classes/.test(q)){const S=schedGet();
   if(!S.length)return FM("No schedule stored, {u}. Say 'schedule add 08:00 08:50 math'.");
   return FM(S.map(p=>`${p.s} ${p.n}`).join(" · "));}
- /* flashcards (Leitner boxes) */
  if(/flashcard/.test(q)){
   let cards=lj("jarvis-flashcards",[]);
   if(/clear/.test(q)){sj("jarvis-flashcards",[]);return FM("Flashcards cleared, {u}.");}
-  if(/stats/.test(q)){const b=[0,0,0,0,0];cards.forEach(c=>b[c.box-1]++);
-   return FM("Boxes 1–5: "+b.join(" / "),{u}?"":undefined)||FM("Boxes 1–5: "+b.join(" / "));}
+  if(/stats/.test(q)){const b=[0,0,0,0,0];cards.forEach(c=>b[(c.box||1)-1]++);
+   return FM("Boxes 1–5: "+b.join(" / "));}
   m=q.match(/add[:\s]+(.+?)\s*[=:]\s*(.+)/);
   if(m){cards.push({q:m[1].trim(),a:m[2].trim(),box:1});sj("jarvis-flashcards",cards);
    return FM(`Flashcard added: "${m[1]}" = "${m[2]}", {u}.`);}
   if(/quiz|test/.test(q)){
    if(!cards.length)return FM("No flashcards yet, {u}. Add some with 'flashcard add Q = A'.");
-   const pool=[];cards.forEach((c,i)=>{const w=Math.max(1,6-c.box);for(let j=0;j<w;j++)pool.push(i);});
+   const pool=[];cards.forEach((c,i)=>{const w=Math.max(1,6-(c.box||1));for(let j=0;j<w;j++)pool.push(i);});
    fcIdx=pool[ri(0,pool.length-1)];
-   jarvisSay(`Flashcard (box ${cards[fcIdx].box}): ${cards[fcIdx].q}`);
+   jarvisSay(`Flashcard (box ${cards[fcIdx].box||1}): ${cards[fcIdx].q}`);
    return FM("Type the answer, {u}.");}
   if(!cards.length)return FM("No flashcards yet, {u}.");
   return FM(`${cards.length} flashcard(s) stored. Say 'flashcard quiz'.`);}
@@ -819,7 +942,7 @@ function localBrain(t){
  m=q.match(/(?:convert|what is)\s+(\w+)\s+in\s+(binary|hex|decimal|octal)/);
  if(m)return FM(`${m[1]} in ${m[2]}: ${convertNumberBase(m[1],10,{binary:2,hex:16,decimal:10,octal:8}[m[2]])}, {u}.`);}
  if(/color|colour/.test(q)){const c=generateColor();return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
- if(/water|hydrat|drink/.test(q)){const g=trackWater();
+ if(/water|hydrat|drink/.test(q)){const g=trackWater();addXP(2);renderProfile();
   return FM(PK({butler:`Hydration logged. ${g} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${g} today.`,pirate:`Grog o' the clear kind, arr! ${g} today!`,hype:`WATER BREAK!! ${g} GLASSES TODAY!!`}));}
  m=q.match(/sleep\s+(\d+(?:\.\d+)?)\s*hours?/);
  if(m){const logs=trackSleep(m[1]);const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
@@ -845,7 +968,7 @@ function localBrain(t){
  if(triviaGame){
   if(/quit|stop|exit/.test(q)){const s=triviaGame.score;triviaGame=null;return FM(`Trivia ended — ${s} correct, {u}.`);}
   const cur=triviaGame.questions[triviaGame.current];
-  if(q.includes(cur.a)){triviaGame.score++;beep(1000,.08);jarvisSay("Correct!");}
+  if(q.includes(cur.a)){triviaGame.score++;addXP(10);beep(1000,.08);jarvisSay("Correct!");}
   else{beep(240,.12);jarvisSay(`Wrong — it was ${cur.a}.`);}
   triviaGame.current++;
   if(triviaGame.current>=triviaGame.questions.length){const s=triviaGame.score;triviaGame=null;return FM(`Trivia complete: ${s}/5 correct, {u}.`);}
@@ -874,19 +997,22 @@ function localBrain(t){
  if(/joke|funny|laugh/.test(q))return FM(JOKES[identity.pers][ri(0,JOKES[identity.pers].length-1)]);
  if(/thank/.test(q))return FM(PK({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
  if(/love/.test(q))return FM(PK({butler:"How kind, {u}. I shall treasure it.",snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
- if(/help|what can you do/.test(q))return FM("School: timer, homework, notes, quiz, flashcard (Leitner), gpa, grade, schedule+bells, focus stats, study tip. Memory: remember/forget. Routines: good morning/good night. Convert: units, timezones, bases. Calculate: bmi, age, tip, loan. Track: water, sleep, expenses. Fun: joke, fact, quote, trivia, riddle, roll, flip, password, color, theme. Web: open/search/pictures. Plus math, weather, wake word 🎙 — and with a Gemini key, anything, {u}.");
- if(/commands?|all commands/.test(q))return FM("150+ commands — type 'help' for categories, {u}.");
+ if(/help|what can you do/.test(q))return FM("0.6: briefing, forecast, zen, aliases, conversation 🗨, XP/ranks/streaks on your PROFILE. School: timer, homework, notes, quiz, flashcards, gpa, schedule+bells, focus stats. Memory, routines, converters, trackers, games, web launcher, themes — plus Gemini for anything, {u}.");
+ if(/commands?|all commands/.test(q))return FM("170+ commands — type 'help' for categories, {u}.");
  if(/chat|comms/.test(q))return FM("Comms docked on the right panel — or 💬 for the full page, {u}.");
  if(/target/.test(q))return FM("Press T or ◎ to engage targeting mode, {u}.");
  if(/gold|secret|konami|easter/.test(q))return FM("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
- if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.5.0 — Stark Industries Unified OS, {u}.");
- if(/about/.test(q))return FM("I am J.A.R.V.I.S. — 150+ commands, 25+ functions, memory, routines, Leitner flashcards, bell tracker, docked comms, themes, backups, offline brain + Gemini uplink, {u}.");
- if(/stats?|statistics/.test(q)){return FM(`${lj("jarvis-homework",[]).length} homework, ${lj("jarvis-notes",[]).length} notes, ${lj("jarvis-flashcards",[]).length} flashcards, ${Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0)} focus sessions, {u}.`);}
+ if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.6.0 — Stark Industries Unified OS, {u}.");
+ if(/about/.test(q))return FM("I am J.A.R.V.I.S. — 170+ commands, 30+ functions, XP & ranks, streaks, briefings, conversation mode, docked comms with presence, broadcasts, themes, particles, backups, offline brain + Gemini uplink, {u}.");
+ if(/stats?|statistics/.test(q)){return FM(`${lj("jarvis-homework",[]).length} homework, ${lj("jarvis-notes",[]).length} notes, ${lj("jarvis-flashcards",[]).length} flashcards, ${Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0)} focus sessions, rank ${rankOf(lj("jarvis-xp",{})[session]||0)}, {u}.`);}
  return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
 
 async function handleCommand(t){log("> "+t);beep(760,.04);
  t=fuzzy(t);
+ const AL=lj("jarvis-aliases",{});const first=t.split(" ")[0].toLowerCase();
+ if(AL[first])t=AL[first]+t.slice(first.length);
  cmdHist.unshift(t);cmdHist=cmdHist.slice(0,30);sj("jarvis-cmdhist",cmdHist);histIdx=-1;
+ addXP(5);
  if(quiz)return quizAnswer(t);
  const wl=webLaunch(t);
  if(wl){const w=window.open(wl.url,"_blank");flare();
@@ -909,7 +1035,6 @@ consoleEl.addEventListener("input",()=>{
  CMDS.filter(c=>c.startsWith(v)&&c!==v).slice(0,5).forEach(c=>{
   const b=document.createElement("button");b.className="btn";b.textContent=c;
   b.onclick=()=>{consoleEl.value=c+" ";consoleEl.focus();};s.appendChild(b);});});
-
 let rec=null,micOn=false;
 $("mic-btn").onclick=()=>{
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -918,12 +1043,11 @@ $("mic-btn").onclick=()=>{
   rec.onresult=e=>{const t=e.results[0][0].transcript;consoleEl.value=t;handleCommand(t);};
   rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
  if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
-
 /* wake word */
 let wakeOn=false,wrec=null;
 $("btn-wake").onclick=()=>{
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR)return jarvisSay("Wake word unsupported in this browser, {u}.");
+ if(!SR)return jarvisSay(FM("Wake word unsupported in this browser, {u}."));
  wakeOn=!wakeOn;$("btn-wake").classList.toggle("hot",wakeOn);
  if(wakeOn){
   wrec=new SR();wrec.continuous=true;wrec.interimResults=false;wrec.lang="en-US";
@@ -959,7 +1083,7 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
 
-/* ============ DOCKED COMMS + PRESENCE ============ */
+/* ============ DOCKED COMMS + PRESENCE + BROADCAST ============ */
 (function(){
  if(typeof mqtt==="undefined")return;
  const list=$("c-list"),nameI=$("c-name"),chanI=$("c-chan"),textI=$("c-text");
@@ -970,26 +1094,31 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
  const BR=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
  const seen=new Set(),pres={};let ci=null,bi=0,con=false;
  const myId=Math.random().toString(36).slice(2);
- const PT="jarvis-site-presence";
+ const PT="jarvis-site-presence",BT="jarvis-site-broadcast";
  function topicFor(ch){ch=(ch||"lounge").trim().toLowerCase().replace(/[^a-z0-9\-_]/g,"-")||"lounge";return "jarvis-site-comms/"+ch;}
  let topic=topicFor(chanI.value);
+ window.mPublish=(t,p)=>{if(con)ci.publish(t,p);};
  function add(name,text,time,sys){const d=document.createElement("div");d.style.marginBottom="4px";
   d.innerHTML=`<b style="color:var(--hot)"></b> <i style="opacity:.5"></i><div></div>`;
   d.children[0].textContent=name;d.children[1].textContent=time||"";d.children[2].textContent=text;
   if(sys)d.style.opacity=.6;
   list.appendChild(d);list.scrollTop=list.scrollHeight;}
  function connect(){ci=mqtt.connect(BR[bi],{clientId:"jarvis-"+myId,connectTimeout:5000,reconnectPeriod:4000});
-  ci.on("connect",()=>{con=true;ci.subscribe(topic);ci.subscribe(PT);add("SYSTEM","Channel open: #"+chanI.value,"",true);});
+  ci.on("connect",()=>{con=true;ci.subscribe(topic);ci.subscribe(PT);ci.subscribe(BT);
+   add("SYSTEM","Channel open: #"+chanI.value,"",true);});
   ci.on("error",()=>{if(!con){bi=(bi+1)%BR.length;try{ci.end(true);}catch(e){}connect();}});
   ci.on("message",(t,p)=>{let m;try{m=JSON.parse(p.toString());}catch(e){return;}
    if(t===PT){if(m.id&&m.id!==myId)pres[m.id]={n:m.n,ts:m.ts};return;}
+   if(t===BT){toast("📡 "+(m.from||"ADMIN")+": "+m.text);flare();beep(1200,.15);return;}
    if(t!==topic||!m.id||seen.has(m.id))return;seen.add(m.id);
    add(m.name||"Guest",m.text||"",m.time||"");beep(520,.05);flare();});}
  connect();
  setInterval(()=>{if(!con)return;
   ci.publish(PT,JSON.stringify({id:myId,n:nameI.value||"Guest",ts:Date.now()}));
-  const now=Date.now();let c=0;for(const k in pres)if(now-pres[k].ts<15000)c++;
-  $("c-on").textContent=c+1;},5000);
+  const now=Date.now();let c=0;const names=[];
+  for(const k in pres)if(now-pres[k].ts<15000){c++;names.push(pres[k].n);}
+  $("c-on").textContent=c+1;
+  $("c-who").textContent=(names.length?names.slice(0,4).join(", ")+" + you":"you");},5000);
  function switchC(){const nt=topicFor(chanI.value);if(nt===topic)return;
   if(con){ci.unsubscribe(topic);ci.subscribe(nt);}
   topic=nt;list.innerHTML="";seen.clear();add("SYSTEM","Switched to #"+chanI.value,"",true);}
@@ -1007,7 +1136,8 @@ function setTgt(on){tgtOn=on;$("tgt").classList.toggle("on",on);beep(on?1200:500
 $("btn-tgt").onclick=()=>setTgt(!tgtOn);
 window.addEventListener("keydown",e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;
- if(e.key==="t"||e.key==="T")setTgt(!tgtOn);});
+ if(e.key==="t"||e.key==="T")setTgt(!tgtOn);
+ if(e.key==="f"||e.key==="F")setZen(!document.body.classList.contains("zen"));});
 $("tgt").addEventListener("mousemove",e=>{
  $("tx").style.left=e.clientX+"px";$("ty").style.top=e.clientY+"px";
  $("tring").style.left=e.clientX+"px";$("tring").style.top=e.clientY+"px";
@@ -1029,7 +1159,8 @@ window.addEventListener("keydown",e=>{
 if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
  navigator.serviceWorker.register("sw.js").catch(()=>{});
 
-log("STARK PROTOCOL v0.5 — awaiting boot…");
+renderProfile();
+log("STARK PROTOCOL v0.6 — awaiting boot…");
 </script>
 </body>
 </html>
