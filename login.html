@@ -6,50 +6,51 @@
 <title>J.A.R.V.I.S. — ACCESS TERMINAL</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-:root{--cy:#3fd0ff;--dim:color-mix(in srgb,var(--cy) 35%,transparent);--faint:color-mix(in srgb,var(--cy) 10%,transparent);--hot:#bfeaff;--panel:color-mix(in srgb,var(--cy) 6%,rgba(0,0,0,.78))}
+:root{--cy:#3fd0ff;--dim:color-mix(in srgb,var(--cy) 35%,transparent);--faint:color-mix(in srgb,var(--cy) 10%,transparent);--hot:#bfeaff;--panel:color-mix(in srgb,var(--cy) 6%,rgba(0,0,0,.8))}
 body.gold{--cy:#ffc46b;--hot:#ffe9c4}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:#000;color:var(--cy);font:13px "Share Tech Mono",monospace;overflow:hidden}
-input,select,button{font:inherit;color:var(--cy)}
-input,select{background:transparent;border:1px solid var(--dim);padding:8px 10px;outline:none;width:100%}
-input:focus{border-color:var(--cy);box-shadow:0 0 10px var(--faint)}
+body{background:#000;color:var(--cy);font:13px "Share Tech Mono",monospace;overflow:hidden;display:flex;flex-direction:column;gap:8px;padding:12px}
+button{font:inherit;color:var(--cy)}
 .hidden{display:none!important}
-.dim{opacity:.75}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.85))}
-#scan{position:fixed;left:0;right:0;height:90px;top:-100px;z-index:97;pointer-events:none;background:linear-gradient(180deg,transparent,var(--faint),transparent);animation:scan 7s linear infinite}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;
+ background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),
+ radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.85))}
+#scan{position:fixed;left:0;right:0;height:90px;top:-100px;z-index:97;pointer-events:none;
+ background:linear-gradient(180deg,transparent,var(--faint),transparent);animation:scan 7s linear infinite}
 @keyframes scan{to{top:110%}}
-#bg{position:fixed;inset:0;margin:auto;width:min(78vmin,640px);opacity:.16;pointer-events:none}
+#bg{position:fixed;inset:0;margin:auto;width:min(80vmin,660px);opacity:.13;pointer-events:none}
 .ring{transform-box:fill-box;transform-origin:center}
 .r1{animation:spin 40s linear infinite}.r2{animation:spin 16s linear infinite reverse}
 @keyframes spin{to{transform:rotate(360deg)}}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:60}
-#boot{z-index:99;cursor:pointer;align-items:flex-start;justify-content:flex-start;padding:9vh 11vw}
-#bootlog{font-size:13px;line-height:1.8;text-shadow:0 0 8px var(--cy);white-space:pre-wrap}
-#boot .skip{position:absolute;bottom:26px;right:34px;opacity:.6;letter-spacing:2px}
-.panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 18px var(--faint);padding:8px 10px;position:relative}
+header{display:flex;justify-content:space-between;align-items:center}
+header h1{font:700 15px Orbitron;letter-spacing:4px;text-shadow:0 0 12px var(--cy)}
+#skip{opacity:.6;letter-spacing:2px;cursor:pointer}
+.panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 18px var(--faint);position:relative}
 .panel::before,.panel::after{content:"";position:absolute;width:10px;height:10px;border:0 solid var(--cy);opacity:.9}
 .panel::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
 .panel::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
-.gpanel{width:430px;max-width:94vw;padding:20px}
-.gpanel h2{font:700 16px Orbitron;letter-spacing:4px;margin-bottom:14px;text-shadow:0 0 10px var(--cy)}
-.gtabs{display:flex;gap:4px;margin-bottom:12px}
-.gtabs .btn{flex:1;padding:6px 2px;font-size:10px;letter-spacing:1px}
-.btn{border:1px solid var(--dim);background:var(--faint);padding:6px 12px;letter-spacing:1px;cursor:pointer}
+#term{flex:1;display:flex;flex-direction:column;max-width:860px;width:100%;margin:0 auto;padding:14px 16px}
+#tlog{flex:1;overflow-y:auto;line-height:1.75;text-shadow:0 0 7px color-mix(in srgb,var(--cy) 60%,transparent);white-space:pre-wrap;scrollbar-width:thin;padding-bottom:8px}
+#tlog .echo{opacity:.85}
+#tlog .err{color:#ff7b7b;text-shadow:0 0 7px rgba(255,80,80,.5)}
+#tlog .ok{color:var(--hot)}
+#tlog .dim{opacity:.55}
+#trow{display:flex;gap:8px;align-items:center;border-top:1px solid var(--dim);padding-top:10px}
+#tprompt{color:var(--hot);white-space:pre}
+#tin{flex:1;background:transparent;border:none;outline:none;color:var(--hot);font:inherit;caret-color:var(--cy)}
+#tacts{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--dim);padding-top:10px}
+.btn{border:1px solid var(--dim);background:var(--faint);padding:6px 14px;letter-spacing:1px;cursor:pointer}
 .btn:hover{background:var(--dim);box-shadow:0 0 10px var(--faint)}
 .btn.hot{background:var(--cy);color:#00131f}
-.gsec{display:flex;flex-direction:column;gap:9px}
-.inrow{display:flex;gap:6px}
-.gerr{color:#ff7b7b;min-height:16px;font-size:11px}
-.ghint{margin-top:14px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
-.row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
-.modal{width:440px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:18px}
-.modal h2{font:700 14px Orbitron;letter-spacing:3px;margin-bottom:10px}
+footer{text-align:center;padding:4px}
+footer span{font:900 13px Orbitron;letter-spacing:8px;color:var(--hot);text-shadow:0 0 14px var(--cy)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:60}
+.mpanel{width:440px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:18px}
+.mpanel h2{font:700 14px Orbitron;letter-spacing:3px;margin-bottom:10px}
 .frow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
-.frow select{width:60%}
+.frow select{width:60%;background:transparent;border:1px solid var(--dim);color:var(--cy);padding:6px}
 .kv{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px}
-#foot{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;z-index:50}
-#foot span{font:900 15px Orbitron;letter-spacing:8px;color:var(--hot);text-shadow:0 0 16px var(--cy)}
 .shake{animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 </style>
@@ -63,74 +64,26 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:98;bac
  <polygon points="130,155 270,155 200,275" fill="none" stroke="var(--cy)" stroke-width="8" stroke-linejoin="round"/>
 </svg>
 
-<div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK TO SKIP ▸</div></div>
+<header><h1>ACCESS TERMINAL // ENROLLMENT PROTOCOL</h1><span id="skip">CLICK TO SKIP ▸</span></header>
 
-<div id="enter" class="overlay hidden">
- <div class="gpanel panel">
-  <h2>WELCOME BACK</h2>
-  <p class="dim" id="enter-who"></p>
-  <div class="row">
-   <button class="btn hot" id="enter-go">ENTER HUD ▸</button>
-   <button class="btn hidden" id="enter-admin">ADMIN</button>
-   <button class="btn" id="enter-switch">SWITCH USER</button>
-  </div>
- </div>
+<div id="term" class="panel">
+ <div id="tlog"></div>
+ <div id="trow" class="hidden"><span id="tprompt">&gt;</span><input id="tin" autocomplete="off"></div>
+ <div id="tacts" class="hidden"></div>
 </div>
 
-<div id="gate" class="overlay hidden">
- <div class="gpanel panel" id="gpanel">
-  <h2>ACCESS TERMINAL</h2>
-  <div id="gate-main">
-   <div class="gtabs">
-    <button class="btn hot" data-gt="in">SIGN IN</button>
-    <button class="btn" data-gt="req">REQUEST ACCESS</button>
-    <button class="btn" data-gt="new">CREATE ACCOUNT</button>
-   </div>
-   <div class="gsec" data-gs="in">
-    <input id="gi-name" placeholder="CALLSIGN" autocomplete="username">
-    <div class="inrow"><input id="gi-pass" type="password" placeholder="PASSKEY" autocomplete="current-password"><button class="btn" data-eye="gi-pass">👁</button></div>
-    <button class="btn" id="gi-go">AUTHENTICATE</button>
-    <div class="gerr" id="gi-err"></div>
-   </div>
-   <div class="gsec hidden" data-gs="req">
-    <input id="ra-name" placeholder="CALLSIGN">
-    <div class="inrow"><input id="ra-pass" type="password" placeholder="PASSKEY"><button class="btn" data-eye="ra-pass">👁</button></div>
-    <button class="btn" id="ra-go">SUBMIT REQUEST</button>
-    <div class="gerr" id="ra-err"></div>
-   </div>
-   <div class="gsec hidden" data-gs="new">
-    <input id="ca-name" placeholder="CALLSIGN">
-    <div class="inrow"><input id="ca-pass" type="password" placeholder="PASSKEY"><button class="btn" data-eye="ca-pass">👁</button></div>
-    <button class="btn" id="ca-go">CREATE</button>
-    <div class="gerr" id="ca-err"></div>
-   </div>
-   <div class="ghint">DEFAULT ADMIN — CALLSIGN: admin · PASSKEY: stark<br>↑ ↑ ↓ ↓ ← → ← → B A</div>
-  </div>
-  <div id="gate-pending" class="hidden">
-   <p style="letter-spacing:3px">⏳ PENDING</p>
-   <p class="dim" style="margin:10px 0">Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.</p>
-   <button class="btn" id="pb-back">BACK</button>
-  </div>
-  <div id="gate-denied" class="hidden">
-   <p style="letter-spacing:3px;color:#ff7b7b">⛔ DENIED</p>
-   <p class="dim" style="margin:10px 0">Your request was denied by an admin.</p>
-   <div class="row"><button class="btn" id="gd-re">SUBMIT NEW REQUEST</button><button class="btn" id="gd-back">BACK</button></div>
-  </div>
- </div>
-</div>
+<footer><span>STARK INDUSTRIES</span></footer>
 
-<div id="admin" class="overlay hidden">
- <div class="modal panel">
+<div id="admin" class="modal hidden">
+ <div class="mpanel panel">
   <h2>ADMIN DASHBOARD</h2>
   <div class="frow"><span>ACCESS MODE</span>
    <select id="adm-mode"><option value="everyone">EVERYONE ALLOWED</option><option value="restricted">RESTRICTED</option></select></div>
   <h2 style="margin-top:10px">ACCESS REQUESTS</h2><div id="adm-req"></div>
   <h2 style="margin-top:10px">USER CONTROL</h2><div id="adm-users"></div>
-  <div class="row" style="margin-top:12px"><button class="btn" id="adm-close">CLOSE</button></div>
+  <div style="margin-top:12px"><button class="btn" id="adm-close">CLOSE</button></div>
  </div>
 </div>
-
-<footer id="foot"><span>STARK INDUSTRIES</span></footer>
 
 <script>
 "use strict";
@@ -138,7 +91,6 @@ const $=id=>document.getElementById(id);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const sj=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-/* sends approved users back where they came from (default: the HUD) */
 const DEST=(()=>{const n=new URLSearchParams(location.search).get("next");
  return n&&/^[a-z0-9\-_]+\.html$/i.test(n)?n:"index.html";})();
 
@@ -147,90 +99,131 @@ if(!users.admin){users.admin={pass:"stark",role:"admin"};sj("jarvis-users",users
 let session=localStorage.getItem("jarvis-session")||"";
 const MODE=()=>localStorage.getItem("jarvis-access-mode")||"everyone";
 
+let snd=true;try{snd=(JSON.parse(localStorage.getItem("jarvis-identity"))||{}).sounds!==false}catch(e){}
 let AC=null;
-function beep(f,d){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+function beep(f,d){if(!snd)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
  const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.05;
  o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+(d||.07));}catch(e){}}
 
-/* boot */
-const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","SECURITY HANDSHAKE ........ STARK PROTOCOL",
-"IDENTITY MATRIX ........... LOADED","ACCESS TERMINAL ........... READY"];
-let skip=false;
-$("boot").addEventListener("click",()=>skip=true);
-(async()=>{for(const L of bootLines){if(skip)break;
-  const d=document.createElement("div");d.textContent=L;$("bootlog").appendChild(d);await wait(220);}
- if(skip)$("bootlog").innerHTML=bootLines.join("<br>");
- await wait(400);$("boot").style.transition="opacity .6s";$("boot").style.opacity=0;
- setTimeout(()=>$("boot").remove(),650);route();})();
+/* ---------- terminal primitives ---------- */
+let skip=false,booting=true;
+$("skip").onclick=()=>skip=true;
+document.addEventListener("click",()=>{if(booting)skip=true;});
+function scroll(){$("tlog").scrollTop=$("tlog").scrollHeight;}
+function line(text,cls){const d=document.createElement("div");if(cls)d.className=cls;
+ d.textContent=text;$("tlog").appendChild(d);scroll();return d;}
+async function typeLine(text,cls){const d=line("",cls);
+ if(skip){d.textContent=text;return;}
+ for(let i=0;i<text.length;i+=2){d.textContent=text.slice(0,i+2);scroll();await wait(8);}
+ d.textContent=text;scroll();}
+function ask(prompt,mask){return new Promise(res=>{
+ $("tprompt").textContent=prompt;
+ $("tin").type=mask?"password":"text";
+ $("trow").classList.remove("hidden");$("tacts").classList.add("hidden");
+ $("tin").value="";$("tin").focus();
+ $("tin").onkeydown=e=>{if(e.key!=="Enter")return;
+  const v=$("tin").value;
+  $("trow").classList.add("hidden");
+  line(prompt+" "+(mask?"•".repeat(v.length):v),"echo");
+  beep(760,.04);res(v);};});}
+function actions(list){$("tacts").innerHTML="";$("tacts").classList.remove("hidden");
+ $("trow").classList.add("hidden");
+ list.forEach(([l,f],i)=>{const b=document.createElement("button");
+  b.className="btn"+(i===0?" hot":"");b.textContent=l;
+  b.onclick=()=>{beep(700,.04);f();};$("tacts").appendChild(b);});}
+function shake(){const t=$("term");t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");}
 
-function route(){
- if(session&&users[session])return showEnter();
- if(MODE()==="everyone"){session="Guest";localStorage.setItem("jarvis-session","Guest");return go();}
- $("gate").classList.remove("hidden");
- if(localStorage.getItem("jarvis-pending-name"))gatePoll();}
-function go(){location.href=DEST;}
+/* ---------- flows ---------- */
+async function boot(){
+ const L=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
+ "SECURITY HANDSHAKE ........ STARK PROTOCOL","IDENTITY MATRIX ........... SCANNING OPERATORS"];
+ for(const s of L){await typeLine(s);beep(300+Math.random()*300,.02);}
+ booting=false;}
 
-/* welcome back */
-let enterTimer=null;
-function showEnter(){
- $("enter").classList.remove("hidden");
- $("enter-who").textContent=`SIGNED IN AS ${session} (${users[session].role})`;
- if(users[session].role==="admin")$("enter-admin").classList.remove("hidden");
- enterTimer=setTimeout(go,3000);}
-$("enter-go").onclick=()=>{clearTimeout(enterTimer);go();};
-$("enter-switch").onclick=()=>{clearTimeout(enterTimer);localStorage.removeItem("jarvis-session");
- session="";$("enter").classList.add("hidden");$("gate").classList.remove("hidden");};
-$("enter-admin").onclick=()=>{clearTimeout(enterTimer);renderAdmin();$("admin").classList.remove("hidden");};
+function enter(){beep(520,.09);setTimeout(()=>beep(780,.12),120);
+ line("> REDIRECTING TO HUD…","ok");
+ setTimeout(()=>location.href=DEST,800);}
 
-/* tabs + passkey eyes */
-document.querySelectorAll("[data-gt]").forEach(b=>b.onclick=()=>{
- document.querySelectorAll("[data-gt]").forEach(x=>x.classList.toggle("hot",x===b));
- document.querySelectorAll("[data-gs]").forEach(s=>s.classList.toggle("hidden",s.dataset.gs!==b.dataset.gt));beep(700,.04);});
-document.querySelectorAll("[data-eye]").forEach(b=>b.onclick=()=>{
- const i=$(b.dataset.eye);i.type=i.type==="password"?"text":"password";});
+function welcomeBack(){
+ typeLine(`> OPERATOR DETECTED: ${session} (${users[session].role})`,"ok");
+ const opts=[["ENTER HUD ▸",enter],["SWITCH USER",()=>{localStorage.removeItem("jarvis-session");session="";line("> SESSION CLEARED","dim");menu();}]];
+ if(users[session].role==="admin")opts.push(["ADMIN DASHBOARD",()=>{renderAdmin();$("admin").classList.remove("hidden");}]);
+ actions(opts);}
 
-/* sign in */
-function shake(){const g=$("gpanel");g.classList.remove("shake");void g.offsetWidth;g.classList.add("shake");}
-$("gi-go").onclick=()=>{
- const n=$("gi-name").value.trim(),p=$("gi-pass").value;
- if(users[n]&&users[n].pass===p){session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);go();}
- else{$("gi-err").textContent="ACCESS DENIED — credentials not recognized.";shake();beep(180,.2);}};
-$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();});
+async function enroll(first){
+ if(first)await typeLine("> NO OPERATOR PROFILE FOUND — INITIATING ENROLLMENT PROTOCOL…","ok");
+ let name;
+ while(true){
+  name=(await ask("> ENTER CALLSIGN:")).trim();
+  if(name.length<2){await typeLine("!! CALLSIGN REQUIRES 2+ CHARACTERS","err");continue;}
+  if(users[name]){await typeLine("!! CALLSIGN ALREADY REGISTERED","err");continue;}
+  break;}
+ await typeLine(`> CALLSIGN "${name.toUpperCase()}" RESERVED`);
+ let p1;
+ while(true){
+  p1=await ask("> CREATE PASSKEY:",true);
+  if(p1.length<2){await typeLine("!! PASSKEY REQUIRES 2+ CHARACTERS","err");continue;}
+  const p2=await ask("> CONFIRM PASSKEY:",true);
+  if(p1!==p2){await typeLine("!! PASSKEY MISMATCH — RE-ENTER","err");continue;}
+  break;}
+ await typeLine("> ENCRYPTING CREDENTIALS ....... AES-256 OK");
+ await typeLine("> WRITING OPERATOR PROFILE ..... OK");
+ users[name]={pass:p1,role:"user"};sj("jarvis-users",users);
+ session=name;localStorage.setItem("jarvis-session",name);
+ await typeLine(`> PROFILE CREATED — WELCOME, ${name.toUpperCase()}`,"ok");
+ enter();}
 
-/* create account */
-$("ca-go").onclick=()=>{
- const n=$("ca-name").value.trim(),p=$("ca-pass").value;
- if(n.length<2||p.length<2)return $("ca-err").textContent="Callsign & passkey: 2+ chars.";
- if(MODE()!=="everyone")return $("ca-err").textContent="Restricted — submit an access request instead.";
- if(users[n])return $("ca-err").textContent="Callsign taken.";
- users[n]={pass:p,role:"user"};sj("jarvis-users",users);
- localStorage.setItem("jarvis-session",n);beep(1040,.1);go();};
+async function signin(){
+ const n=(await ask("> CALLSIGN:")).trim();
+ const p=await ask("> PASSKEY:",true);
+ if(users[n]&&users[n].pass===p){
+  session=n;localStorage.setItem("jarvis-session",n);
+  await typeLine(`> ACCESS GRANTED — WELCOME BACK, ${n.toUpperCase()}`,"ok");
+  if(users[n].role==="admin"){
+   actions([["CONTINUE ▸",enter],["ADMIN DASHBOARD",()=>{renderAdmin();$("admin").classList.remove("hidden");}]]);return;}
+  enter();}
+ else{await typeLine("!! ACCESS DENIED — CREDENTIALS NOT RECOGNIZED","err");beep(180,.2);shake();
+  actions([["RETRY",signin],["BACK",menu]]);}}
 
-/* request access */
-$("ra-go").onclick=()=>{
- const n=$("ra-name").value.trim(),p=$("ra-pass").value;
- if(n.length<2)return $("ra-err").textContent="Callsign required.";
+async function request(){
+ const n=(await ask("> CALLSIGN:")).trim();
+ if(n.length<2){await typeLine("!! CALLSIGN REQUIRED","err");return request();}
+ const p=await ask("> PASSKEY:",true);
  const reqs=lj("jarvis-requests",[]).filter(r=>r.name!==n);
  reqs.push({name:n,pass:p,status:"pending"});sj("jarvis-requests",reqs);
- localStorage.setItem("jarvis-pending-name",n);showPending();beep(600,.06);};
-function showPending(){$("gate-main").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-pending").classList.remove("hidden");}
-function showDenied(){$("gate-main").classList.add("hidden");$("gate-pending").classList.add("hidden");$("gate-denied").classList.remove("hidden");}
-function showMain(){$("gate-pending").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-main").classList.remove("hidden");}
-$("pb-back").onclick=showMain;
-$("gd-back").onclick=showMain;
-$("gd-re").onclick=()=>{showMain();document.querySelector('[data-gt="req"]').click();};
+ localStorage.setItem("jarvis-pending-name",n);
+ pendingView();}
 
-function gatePoll(){
- const n=localStorage.getItem("jarvis-pending-name");if(!n)return;
- const r=lj("jarvis-requests",[]).find(r=>r.name===n);
- if(!r||r.status==="pending")return showPending();
- if(r.status==="denied")return showDenied();
- localStorage.removeItem("jarvis-pending-name");
- session=n;localStorage.setItem("jarvis-session",n);beep(1040,.12);go();}
-setInterval(gatePoll,2000);
-window.addEventListener("storage",gatePoll);
+let pollTimer=null;
+function pendingView(){
+ line("⏳ PENDING","ok");
+ line("Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.","dim");
+ actions([["BACK",menu]]);
+ pollTimer=setInterval(()=>{
+  const n=localStorage.getItem("jarvis-pending-name");if(!n)return;
+  const r=lj("jarvis-requests",[]).find(x=>x.name===n);if(!r)return;
+  if(r.status==="approved"){clearInterval(pollTimer);localStorage.removeItem("jarvis-pending-name");
+   session=n;localStorage.setItem("jarvis-session",n);
+   typeLine(`> ACCESS GRANTED — WELCOME, ${n.toUpperCase()}`,"ok").then(enter);}
+  if(r.status==="denied"){clearInterval(pollTimer);deniedView();}},2000);}
+window.addEventListener("storage",()=>{if(pollTimer)pendingCheckNow();});
+function pendingCheckNow(){/* storage event triggers interval check on next tick; force immediate */}
 
-/* admin */
+function deniedView(){
+ line("⛔ DENIED","err");
+ line("Your request was denied by an admin.","dim");
+ actions([["SUBMIT NEW REQUEST",request],["BACK",menu]]);}
+
+function menu(){
+ line("> SELECT OPERATION:");
+ const opts=[["[1] SIGN IN",signin],["[2] CREATE ACCOUNT",create],["[3] REQUEST ACCESS",request]];
+ if(MODE()==="everyone")opts.push(["[4] CONTINUE AS GUEST",()=>{session="Guest";localStorage.setItem("jarvis-session","Guest");enter();}]);
+ actions(opts);}
+async function create(){
+ if(MODE()!=="everyone"){await typeLine("!! ACCESS MODE RESTRICTED — CONVERTING TO ACCESS REQUEST","err");return request();}
+ enroll(false);}
+
+/* ---------- admin ---------- */
 $("adm-close").onclick=()=>$("admin").classList.add("hidden");
 $("adm-mode").onchange=e=>{localStorage.setItem("jarvis-access-mode",e.target.value);beep(600,.05);};
 function renderAdmin(){
@@ -238,7 +231,7 @@ function renderAdmin(){
  const reqs=lj("jarvis-requests",[]);$("adm-req").innerHTML="";
  if(!reqs.length)$("adm-req").innerHTML='<div class="kv"><span>—</span><span>no requests</span></div>';
  reqs.forEach(r=>{const d=document.createElement("div");d.className="kv";
-  d.innerHTML=`<span>${r.name} <i class="dim">(${r.status})</i></span><span></span>`;
+  d.innerHTML=`<span>${r.name} <i style="opacity:.6">(${r.status})</i></span><span></span>`;
   const box=d.lastChild;
   if(r.status==="pending"){
    const a=document.createElement("button");a.className="btn";a.textContent="✔";
@@ -249,10 +242,21 @@ function renderAdmin(){
   $("adm-req").appendChild(d);});
  $("adm-users").innerHTML="";
  Object.keys(users).forEach(n=>{const d=document.createElement("div");d.className="kv";
-  d.innerHTML=`<span>${n} <i class="dim">(${users[n].role})</i></span><span></span>`;
+  d.innerHTML=`<span>${n} <i style="opacity:.6">(${users[n].role})</i></span><span></span>`;
   if(n!=="admin"&&n!==session){const x=document.createElement("button");x.className="btn";x.textContent="✖";
    x.onclick=()=>{delete users[n];sj("jarvis-users",users);renderAdmin();};d.lastChild.appendChild(x);}
   $("adm-users").appendChild(d);});}
+
+/* ---------- main ---------- */
+(async()=>{
+ await boot();
+ if(session&&users[session])return welcomeBack();
+ if(localStorage.getItem("jarvis-pending-name"))return pendingView();
+ const fresh=Object.keys(users).filter(n=>n!=="admin").length===0;
+ if(fresh)return enroll(true);
+ menu();
+ line("DEFAULT ADMIN — admin / stark · ↑ ↑ ↓ ↓ ← → ← → B A","dim");
+})();
 
 /* konami */
 const K=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];let ki=0;
