@@ -71,23 +71,27 @@ canvas{width:100%;display:block}
 #foot::before,#foot::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--dim))}
 #foot::after{background:linear-gradient(90deg,var(--dim),transparent)}
 #foot span{font:900 18px Orbitron;letter-spacing:10px;color:var(--hot);text-shadow:0 0 18px var(--cy)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60}
 #boot{z-index:99;cursor:pointer;align-items:flex-start;justify-content:flex-start;padding:8vh 10vw}
 #bootlog{font-size:13px;line-height:1.7;text-shadow:0 0 8px var(--cy);white-space:pre-wrap}
 #boot .skip{position:absolute;bottom:24px;right:32px;opacity:.6;letter-spacing:2px}
-.gpanel{width:420px;max-width:94vw;padding:18px}
-.gpanel h2{font:700 16px Orbitron;letter-spacing:4px;margin-bottom:12px;text-shadow:0 0 10px var(--cy)}
-.gtabs{display:flex;gap:4px;margin-bottom:10px}
-.gtabs .btn{flex:1;padding:5px 2px;font-size:10px}
-.gsec{display:flex;flex-direction:column;gap:8px}
-.inrow{display:flex;gap:6px}
-.gerr{color:#ff7b7b;min-height:14px;font-size:11px}
-.ghint{margin-top:12px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
-.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+/* ---- TERMINAL LOGIN ---- */
+#term{width:min(860px,94vw);height:min(72vh,640px);display:flex;flex-direction:column;padding:14px 16px}
+#tlog{flex:1;overflow-y:auto;line-height:1.75;text-shadow:0 0 7px color-mix(in srgb,var(--cy) 60%,transparent);white-space:pre-wrap;scrollbar-width:thin}
+#tlog .echo{opacity:.85}
+#tlog .err{color:#ff7b7b;text-shadow:0 0 7px rgba(255,80,80,.5)}
+#tlog .ok{color:var(--hot)}
+#tlog .dim{opacity:.55}
+#trow{display:flex;gap:8px;align-items:center;border-top:1px solid var(--dim);padding-top:10px}
+#tprompt{color:var(--hot);white-space:pre}
+#tin{flex:1;background:transparent;border:none;outline:none;color:var(--hot);font:inherit;caret-color:var(--cy)}
+#tacts{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--dim);padding-top:10px}
 .modal{width:430px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:16px}
 .modal h2{font:700 14px Orbitron;letter-spacing:3px;margin-bottom:10px}
 .frow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:11px}
 .frow input,.frow select{width:60%}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ghint{margin-top:12px;opacity:.45;font-size:10px;letter-spacing:1px;text-align:center;line-height:1.7}
 #tgt{position:fixed;inset:0;z-index:70;cursor:crosshair;display:none}
 #tgt.on{display:block}
 #tgt .ln{position:absolute;background:var(--dim)}
@@ -105,45 +109,12 @@ canvas{width:100%;display:block}
 
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
+<!-- TERMINAL LOGIN -->
 <div id="gate" class="overlay hidden">
- <div class="gpanel panel" id="gpanel">
-  <h2>ACCESS TERMINAL</h2>
-  <div id="gate-main">
-   <div class="gtabs">
-    <button class="btn hot" data-gt="in">SIGN IN</button>
-    <button class="btn" data-gt="req">REQUEST ACCESS</button>
-    <button class="btn" data-gt="new">CREATE ACCOUNT</button>
-   </div>
-   <div class="gsec" data-gs="in">
-    <input id="gi-name" placeholder="CALLSIGN" autocomplete="username">
-    <div class="inrow"><input id="gi-pass" type="password" placeholder="PASSKEY" autocomplete="current-password"><button class="btn" data-eye="gi-pass">👁</button></div>
-    <button class="btn" id="gi-go">AUTHENTICATE</button>
-    <div class="gerr" id="gi-err"></div>
-   </div>
-   <div class="gsec hidden" data-gs="req">
-    <input id="ra-name" placeholder="CALLSIGN">
-    <div class="inrow"><input id="ra-pass" type="password" placeholder="PASSKEY"><button class="btn" data-eye="ra-pass">👁</button></div>
-    <button class="btn" id="ra-go">SUBMIT REQUEST</button>
-    <div class="gerr" id="ra-err"></div>
-   </div>
-   <div class="gsec hidden" data-gs="new">
-    <input id="ca-name" placeholder="CALLSIGN">
-    <div class="inrow"><input id="ca-pass" type="password" placeholder="PASSKEY"><button class="btn" data-eye="ca-pass">👁</button></div>
-    <button class="btn" id="ca-go">CREATE</button>
-    <div class="gerr" id="ca-err"></div>
-   </div>
-   <div class="ghint">ADMIN CLEARANCE: CALLSIGN "BYRON" ONLY<br>↑ ↑ ↓ ↓ ← → ← → B A</div>
-  </div>
-  <div id="gate-pending" class="hidden">
-   <p style="letter-spacing:3px">⏳ PENDING</p>
-   <p style="margin:10px 0;opacity:.8">Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.</p>
-   <button class="btn" id="pb-back">BACK</button>
-  </div>
-  <div id="gate-denied" class="hidden">
-   <p style="letter-spacing:3px;color:#ff7b7b">⛔ DENIED</p>
-   <p style="margin:10px 0;opacity:.8">Your request was denied by an admin.</p>
-   <div class="row"><button class="btn" id="gd-re">SUBMIT NEW REQUEST</button><button class="btn" id="gd-back">BACK</button></div>
-  </div>
+ <div id="term" class="panel">
+  <div id="tlog"></div>
+  <div id="trow" class="hidden"><span id="tprompt">&gt;</span><input id="tin" autocomplete="off"></div>
+  <div id="tacts" class="hidden"></div>
  </div>
 </div>
 
@@ -158,7 +129,7 @@ canvas{width:100%;display:block}
   <div class="frow"><span>Interface sounds</span><input type="checkbox" id="set-sounds" style="width:auto"></div>
   <h2 style="margin-top:14px">SETTINGS — GEMINI UPLINK</h2>
   <div class="frow"><span>API key</span>
-   <div class="inrow" style="width:60%"><input id="set-key" type="password" placeholder="AIza…"><button class="btn" id="set-show">SHOW</button></div></div>
+   <div class="row" style="width:60%;margin:0"><input id="set-key" type="password" placeholder="AIza…"><button class="btn" id="set-show">SHOW</button></div></div>
   <div class="frow"><span></span><span id="set-stat" style="opacity:.7"></span></div>
   <div class="row">
    <button class="btn" id="set-test">TEST</button>
@@ -263,6 +234,7 @@ const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){retu
 const sj=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0ff";
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
+let skip=false;
 
 /* sound */
 let AC=null;
@@ -285,7 +257,7 @@ const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — 
 "BOOT COMPLETE — WAKE UP, SIR."];
 let bootDone=false;
 function finishBoot(){
-  if(bootDone)return;bootDone=true;
+  if(bootDone)return;bootDone=true;skip=true;
   const b=$("boot");
   const next=()=>{try{checkGate();}catch(e){console.error(e);}};
   if(!b)return next();
@@ -304,7 +276,7 @@ setTimeout(finishBoot,6000);
   await wait(400);
 }catch(e){console.error(e);}finally{finishBoot();}})();
 
-/* ============ SIGN UP / SIGN IN (BYRON = ONLY ADMIN) ============ */
+/* ============ TERMINAL LOGIN (BYRON = ONLY ADMIN) ============ */
 let users=lj("jarvis-users",{});
 const isAdmin=n=>(n||"").toLowerCase()==="byron";
 if(users.admin&&users.admin.pass==="stark")delete users.admin;
@@ -313,59 +285,114 @@ sj("jarvis-users",users);
 let session=localStorage.getItem("jarvis-session")||"";
 const MODE=()=>localStorage.getItem("jarvis-access-mode")||"everyone";
 
-document.querySelectorAll("[data-gt]").forEach(b=>b.onclick=()=>{
- document.querySelectorAll("[data-gt]").forEach(x=>x.classList.toggle("hot",x===b));
- document.querySelectorAll("[data-gs]").forEach(s=>s.classList.toggle("hidden",s.dataset.gs!==b.dataset.gt));
- beep(700,.04);});
-document.querySelectorAll("[data-eye]").forEach(b=>b.onclick=()=>{
- const i=$(b.dataset.eye);i.type=i.type==="password"?"text":"password";});
-function shake(){const g=$("gpanel");g.classList.remove("shake");void g.offsetWidth;g.classList.add("shake");}
-
-$("gi-go").onclick=()=>{
- const raw=$("gi-name").value.trim(),p=$("gi-pass").value;
- const n=Object.keys(users).find(k=>k.toLowerCase()===raw.toLowerCase());
- if(n&&users[n].pass===p){session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);unlock();}
- else{$("gi-err").textContent="ACCESS DENIED — credentials not recognized.";shake();beep(180,.2,"sawtooth");}};
-$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();});
-
-$("ca-go").onclick=()=>{
- const n=$("ca-name").value.trim(),p=$("ca-pass").value;
- if(n.length<2||p.length<2)return $("ca-err").textContent="Callsign & passkey: 2+ chars.";
- if(MODE()!=="everyone")return $("ca-err").textContent="Restricted — submit an access request instead.";
- if(Object.keys(users).some(k=>k.toLowerCase()===n.toLowerCase()))return $("ca-err").textContent="Callsign taken.";
- users[n]={pass:p,role:isAdmin(n)?"admin":"user"};sj("jarvis-users",users);
- session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);unlock();};
-
-$("ra-go").onclick=()=>{
- const n=$("ra-name").value.trim(),p=$("ra-pass").value;
- if(n.length<2)return $("ra-err").textContent="Callsign required.";
- const reqs=lj("jarvis-requests",[]).filter(r=>r.name!==n);
- reqs.push({name:n,pass:p,status:"pending"});sj("jarvis-requests",reqs);
- localStorage.setItem("jarvis-pending-name",n);showPending();beep(600,.06);};
-function showPending(){$("gate-main").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-pending").classList.remove("hidden");}
-function showDenied(){$("gate-main").classList.add("hidden");$("gate-pending").classList.add("hidden");$("gate-denied").classList.remove("hidden");}
-function showMain(){$("gate-pending").classList.add("hidden");$("gate-denied").classList.add("hidden");$("gate-main").classList.remove("hidden");}
-$("pb-back").onclick=showMain;$("gd-back").onclick=showMain;
-$("gd-re").onclick=()=>{showMain();document.querySelector('[data-gt="req"]').click();};
-
-function gatePoll(){
- const n=localStorage.getItem("jarvis-pending-name");if(!n)return;
- const r=lj("jarvis-requests",[]).find(r=>r.name===n);
- if(!r||r.status==="pending")return showPending();
- if(r.status==="denied")return showDenied();
- localStorage.removeItem("jarvis-pending-name");
- session=n;localStorage.setItem("jarvis-session",n);beep(1040,.12);unlock();}
-setInterval(gatePoll,2000);
-window.addEventListener("storage",gatePoll);
+function tscroll(){$("tlog").scrollTop=$("tlog").scrollHeight;}
+function tline(text,cls){const d=document.createElement("div");if(cls)d.className=cls;
+ d.textContent=text;$("tlog").appendChild(d);tscroll();return d;}
+async function ttype(text,cls){const d=tline("",cls);
+ if(skip){d.textContent=text;return;}
+ for(let i=0;i<text.length;i+=2){d.textContent=text.slice(0,i+2);tscroll();await wait(8);}
+ d.textContent=text;tscroll();}
+function task(prompt,mask){return new Promise(res=>{
+ $("tprompt").textContent=prompt;
+ $("tin").type=mask?"password":"text";
+ $("trow").classList.remove("hidden");$("tacts").classList.add("hidden");
+ $("tin").value="";$("tin").focus();
+ $("tin").onkeydown=e=>{if(e.key!=="Enter")return;
+  const v=$("tin").value;$("trow").classList.add("hidden");
+  tline(prompt+" "+(mask?"•".repeat(v.length):v),"echo");beep(760,.04);res(v);};});}
+function tactions(list){$("tacts").innerHTML="";$("tacts").classList.remove("hidden");$("trow").classList.add("hidden");
+ list.forEach(([l,f],i)=>{const b=document.createElement("button");b.className="btn"+(i===0?" hot":"");b.textContent=l;
+  b.onclick=()=>{beep(700,.04);f();};$("tacts").appendChild(b);});}
+function shakeTerm(){const t=$("term");t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");}
+$("term").addEventListener("click",e=>{if(e.target===$("term")||e.target===$("tlog"))skip=true;});
 
 function checkGate(){
  if(session&&users[session])return unlock();
  $("gate").classList.remove("hidden");
- if(Object.keys(users).length===0){
-   const b=document.querySelector('[data-gt="new"]');if(b)b.click();}
- if(localStorage.getItem("jarvis-pending-name"))gatePoll();}
+ if(localStorage.getItem("jarvis-pending-name"))return pendingView();
+ if(Object.keys(users).length===0)return enroll(true);
+ menu();}
+
+function menu(){
+ tline("> SELECT OPERATION:");
+ tline('ADMIN CLEARANCE: CALLSIGN "BYRON" ONLY',"dim");
+ tactions([["[1] SIGN IN",signin],["[2] CREATE ACCOUNT",create],["[3] REQUEST ACCESS",request]]);}
+
+async function enroll(first){
+ if(first)await ttype("> NO OPERATOR PROFILE FOUND — INITIATING ENROLLMENT PROTOCOL…","ok");
+ let name;
+ while(true){
+  name=(await task("> ENTER CALLSIGN:")).trim();
+  if(name.length<2){await ttype("!! CALLSIGN REQUIRES 2+ CHARACTERS","err");continue;}
+  if(Object.keys(users).some(k=>k.toLowerCase()===name.toLowerCase())){await ttype("!! CALLSIGN ALREADY REGISTERED","err");continue;}
+  break;}
+ await ttype(`> CALLSIGN "${name.toUpperCase()}" RESERVED`);
+ let p1;
+ while(true){
+  p1=await task("> CREATE PASSKEY:",true);
+  if(p1.length<2){await ttype("!! PASSKEY REQUIRES 2+ CHARACTERS","err");continue;}
+  const p2=await task("> CONFIRM PASSKEY:",true);
+  if(p1!==p2){await ttype("!! PASSKEY MISMATCH — RE-ENTER","err");continue;}
+  break;}
+ await ttype("> ENCRYPTING CREDENTIALS ....... AES-256 OK");
+ await ttype("> WRITING OPERATOR PROFILE ..... OK");
+ users[name]={pass:p1,role:isAdmin(name)?"admin":"user"};sj("jarvis-users",users);
+ session=name;localStorage.setItem("jarvis-session",name);
+ await ttype(`> PROFILE CREATED — WELCOME, ${name.toUpperCase()}`,"ok");
+ if(isAdmin(name))return adminChoice();
+ unlock();}
+
+async function signin(){
+ const raw=(await task("> CALLSIGN:")).trim();
+ const n=Object.keys(users).find(k=>k.toLowerCase()===raw.toLowerCase());
+ const p=await task("> PASSKEY:",true);
+ if(n&&users[n].pass===p){
+  session=n;localStorage.setItem("jarvis-session",n);
+  await ttype(`> ACCESS GRANTED — WELCOME BACK, ${n.toUpperCase()}`,"ok");
+  if(isAdmin(n))return adminChoice();
+  unlock();}
+ else{await ttype("!! ACCESS DENIED — CREDENTIALS NOT RECOGNIZED","err");beep(180,.2);shakeTerm();
+  tactions([["RETRY",signin],["BACK",menu]]);}}
+
+async function create(){
+ if(MODE()!=="everyone"){await ttype("!! ACCESS MODE RESTRICTED — CONVERTING TO ACCESS REQUEST","err");return request();}
+ enroll(false);}
+
+async function request(){
+ const n=(await task("> CALLSIGN:")).trim();
+ if(n.length<2){await ttype("!! CALLSIGN REQUIRED","err");return request();}
+ const p=await task("> PASSKEY:",true);
+ const reqs=lj("jarvis-requests",[]).filter(r=>r.name!==n);
+ reqs.push({name:n,pass:p,status:"pending"});sj("jarvis-requests",reqs);
+ localStorage.setItem("jarvis-pending-name",n);
+ pendingView();}
+
+let pollTimer=null;
+function pendingView(){
+ tline("⏳ PENDING","ok");
+ tline("Your request is awaiting admin approval. This terminal unlocks automatically the moment you're approved.","dim");
+ tactions([["BACK",menu]]);
+ if(pollTimer)clearInterval(pollTimer);
+ pollTimer=setInterval(()=>{
+  const n=localStorage.getItem("jarvis-pending-name");if(!n)return;
+  const r=lj("jarvis-requests",[]).find(x=>x.name===n);if(!r)return;
+  if(r.status==="approved"){clearInterval(pollTimer);pollTimer=null;
+   localStorage.removeItem("jarvis-pending-name");
+   session=n;localStorage.setItem("jarvis-session",n);
+   ttype(`> ACCESS GRANTED — WELCOME, ${n.toUpperCase()}`,"ok").then(()=>{isAdmin(n)?adminChoice():unlock();});}
+  if(r.status==="denied"){clearInterval(pollTimer);pollTimer=null;deniedView();}},2000);}
+function deniedView(){
+ tline("⛔ DENIED","err");
+ tline("Your request was denied by an admin.","dim");
+ tactions([["SUBMIT NEW REQUEST",request],["BACK",menu]]);}
+
+function adminChoice(){
+ ttype("> ADMIN PRIVILEGES DETECTED","ok");
+ tactions([["CONTINUE ▸",unlock],["ADMIN DASHBOARD",openAdmin]]);}
+function openAdmin(){renderAdmin();$("admin").classList.remove("hidden");}
 
 function unlock(){
+ if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
  $("gate").classList.add("hidden");
  $("badge-user").textContent=session;
  $("reactor").classList.add("online");
@@ -377,7 +404,7 @@ function unlock(){
  beep(520,.09);setTimeout(()=>beep(780,.12),120);}
 
 /* ============ ADMIN ============ */
-$("btn-admin").onclick=()=>{renderAdmin();$("admin").classList.remove("hidden");};
+$("btn-admin").onclick=openAdmin;
 $("adm-close").onclick=()=>$("admin").classList.add("hidden");
 $("adm-mode").onchange=e=>{localStorage.setItem("jarvis-access-mode",e.target.value);beep(600,.05);};
 function renderAdmin(){
