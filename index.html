@@ -125,6 +125,20 @@ canvas{width:100%;display:block}
 <div id="toasts"></div>
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
+<script>
+/* FREEZE-SHIELD — boot can ALWAYS be dismissed, even if the main script crashes */
+(function(){
+  var done=false;
+  function kill(){if(done)return;done=true;
+    var b=document.getElementById("boot");
+    if(b){b.style.transition="opacity .5s";b.style.opacity="0";
+      setTimeout(function(){b.remove();},600);}}
+  document.getElementById("boot").addEventListener("click",kill);
+  window.addEventListener("keydown",kill,{once:true});
+  setTimeout(kill,7000); /* hard failsafe */
+})();
+</script>
+ 
 <div id="gate" class="overlay hidden">
  <div id="term" class="panel">
   <div id="tlog"></div>
@@ -315,17 +329,19 @@ function followListen(){const SR=window.SpeechRecognition||window.webkitSpeechRe
 let onFlare=null;
 function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);if(onFlare)onFlare();}
 
-/* reactor particles */
-const sp=$("sparks"),sx=sp.getContext("2d");let PART=[];
-function sizeSparks(){sp.width=sp.clientWidth||600;sp.height=sp.clientHeight||400;}
-window.addEventListener("resize",sizeSparks);sizeSparks();
-function burst(n=24){for(let i=0;i<n;i++)PART.push({x:sp.width/2,y:sp.height/2,a:Math.random()*6.28,v:1+Math.random()*3,l:1});}
+/* reactor particles (guarded) */
+const sp=$("sparks");let sx=null,PART=[];
+if(sp){sx=sp.getContext("2d");
+ function sizeSparks(){sp.width=sp.clientWidth||600;sp.height=sp.clientHeight||400;}
+ window.addEventListener("resize",sizeSparks);sizeSparks();}
+function burst(n=24){if(!sp)return;
+ for(let i=0;i<n;i++)PART.push({x:sp.width/2,y:sp.height/2,a:Math.random()*6.28,v:1+Math.random()*3,l:1});}
 onFlare=()=>burst(24);
-(function loop(){sx.clearRect(0,0,sp.width,sp.height);
+(function loop(){if(sx){sx.clearRect(0,0,sp.width,sp.height);
  PART=PART.filter(p=>p.l>0);
  PART.forEach(p=>{p.x+=Math.cos(p.a)*p.v;p.y+=Math.sin(p.a)*p.v;p.l-=.02;
   sx.globalAlpha=Math.max(0,p.l);sx.fillStyle=COL;sx.fillRect(p.x,p.y,2,2);});
- sx.globalAlpha=1;requestAnimationFrame(loop);})();
+ sx.globalAlpha=1;}requestAnimationFrame(loop);})();
 
 /* battery */
 if(navigator.getBattery)navigator.getBattery().then(b=>{
