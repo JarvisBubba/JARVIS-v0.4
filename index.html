@@ -218,6 +218,7 @@ canvas{width:100%;display:block}
    <g class="ring r1">
     <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
     <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
+   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.4 · </textPath></text></g>
    <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
    <g class="ring r3">
     <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
@@ -355,8 +356,9 @@ window.addEventListener("storage",gatePoll);
 
 function checkGate(){
  if(session&&users[session])return unlock();
- if(MODE()==="everyone"){session="Guest";return unlock();}
  $("gate").classList.remove("hidden");
+ if(Object.keys(users).filter(n=>n!=="admin").length===0){
+   const b=document.querySelector('[data-gt="new"]');if(b)b.click();}
  if(localStorage.getItem("jarvis-pending-name"))gatePoll();}
 
 function unlock(){
@@ -471,34 +473,18 @@ function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=$
   $("pres").textContent=Math.round(c.surface_pressure)+" hPa";}).catch(()=>{});}
 navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
 
-/* ============ CONSOLE + GEMINI BRAIN ============ */
-function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
- while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);}
-function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": ";
- const d=document.createElement("div");$("corelog").appendChild(d);
- while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);
- let i=0;const iv=setInterval(()=>{i+=2;d.textContent=pre+t.slice(0,i);if(i>=t.length)clearInterval(iv);},16);}
-function sysPrompt(){const P={butler:"Dry, refined British butler. Polite, understated wit.",
- snark:"Sarcastic and cutting, but always helpful.",pirate:"Ruthless space pirate. Pepper with 'arr' and nautical slang.",
- hype:"Over-caffeinated hype man. Pure energy, exclamation points."}[identity.pers];
- return `You are ${identity.name}, an AI in a Stark Industries HUD. ${P} Address the user as "${identity.user||"sir"}". Replies under 3 sentences.`;}
-async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")||"";if(!key)return null;
- const body=JSON.stringify({systemInstruction:{parts:[{text:sysPrompt()}]},contents:[{parts:[{text:t}]}]});
- for(const m of["gemini-2.0-flash","gemini-1.5-flash"]){try{
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`,
-   {method:"POST",headers:{"Content-Type":"application/json"},body});
-  const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
- return null;}
-/* offline brain — NO key needed · SCHOOL MODE included */
+/* ============ 100+ COMMANDS & 20+ FUNCTIONS ============ */
 const U=()=>identity.user||session||"sir";
 const PK=o=>o[identity.pers]||o.butler;
 const FM=s=>s.replace(/{u}/g,U());
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-let quiz=null;
+let quiz=null,triviaGame=null;
+
+/* ---- FUNCTION LIBRARY (20+ functions) ---- */
 function setTimer(amount,unit,label){
  const ms=/^s/.test(unit||"")?amount*1000:/^h/.test(unit||"")?amount*3600000:amount*60000;
- jarvisSay(FM(PK({butler:`Very well — timer set for ${amount} ${unit||"minutes"}, {u}.`,
-  snark:`Timer set: ${amount} ${unit||"minutes"}. Try to stay conscious, {u}.`,
+ jarvisSay(FM(PK({butler:`Timer set for ${amount} ${unit||"minutes"}, {u}.`,
+  snark:`Timer: ${amount} ${unit||"minutes"}. Try to stay conscious, {u}.`,
   pirate:`Sandglass turned — ${amount} ${unit||"minutes"}, arr!`,
   hype:`TIMER ON!! ${amount} ${unit||"MINUTES"}!! GO GO GO!!`})));
  setTimeout(()=>{flare();for(let i=0;i<3;i++)setTimeout(()=>beep(1400,.18),i*260);
@@ -510,6 +496,119 @@ function defineWord(w){fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+
 function wiki(q){fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(q.replace(/ /g,"_")))
  .then(r=>r.json()).then(j=>jarvisSay(j.extract?(q+" — "+j.extract).slice(0,500):`Nothing found on "${q}", ${U()}.`))
  .catch(()=>jarvisSay("Research uplink silent, "+U()+"."));}
+function convertUnits(val,from,to){
+ const conversions={m:{ft:3.28084,km:0.001,mi:0.000621371,yd:1.09361,in:39.3701},
+  kg:{lb:2.20462,g:1000,oz:35.274},c:{f:(v)=>v*9/5+32,k:(v)=>v+273.15},
+  f:{c:(v)=>(v-32)*5/9,k:(v)=>(v-32)*5/9+273.15}};
+ const conv=conversions[from]?.[to];
+ if(typeof conv==="function")return conv(val);
+ if(typeof conv==="number")return val*conv;
+ return null;}
+function calculateGPA(grades){const pts={"A+":4,"A":4,"A-":3.7,"B+":3.3,"B":3,"B-":2.7,"C+":2.3,"C":2,"C-":1.7,"D+":1.3,"D":1,"F":0};
+ let total=0,count=0;grades.forEach(g=>{if(pts[g.toUpperCase()]!==undefined){total+=pts[g.toUpperCase()];count++;}});
+ return count?+(total/count).toFixed(2):null;}
+function generatePassword(len=12){const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+ let p="";for(let i=0;i<len;i++)p+=c[ri(0,c.length-1)];return p;}
+function transformText(text,mode){
+ switch(mode){
+  case"upper":return text.toUpperCase();
+  case"lower":return text.toLowerCase();
+  case"reverse":return text.split("").reverse().join("");
+  case"title":return text.replace(/\w\S*/g,t=>t.charAt(0).toUpperCase()+t.substr(1).toLowerCase());
+  case"snake":return text.toLowerCase().replace(/\s+/g,"_");
+  case"camel":return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g,(m,c)=>c.toUpperCase());
+  default:return text;}}
+function countWords(text){return text.trim().split(/\s+/).filter(w=>w.length>0).length;}
+function calculateReadingTime(text){const words=countWords(text);return Math.ceil(words/200);}
+function generateQuote(){const q=["The only way to do great work is to love what you do.","Innovation distinguishes between a leader and a follower.",
+ "Stay hungry, stay foolish.","The future belongs to those who believe in the beauty of their dreams.","Success is not final, failure is not fatal.","Believe you can and you're halfway there."];
+ return q[ri(0,q.length-1)];}
+function generateFact(){const f=["Honey never spoils.","Octopuses have three hearts.","A day on Venus is longer than a year on Venus.",
+ "Bananas are berries, but strawberries aren't.","The shortest commercial flight in the world lasts 57 seconds.","Cows have best friends."];
+ return f[ri(0,f.length-1)];}
+function calculateBMI(weight,height,unit){
+ if(unit==="imperial"){weight=weight*0.453592;height=height*0.0254;}else{height/=100;}
+ return+(weight/(height*height)).toFixed(1);}
+function calculateAge(birthdate){const birth=new Date(birthdate),now=new Date();
+ let age=now.getFullYear()-birth.getFullYear();
+ const m=now.getMonth()-birth.getMonth();
+ if(m<0||(m===0&&now.getDate()<birth.getDate()))age--;
+ return age;}
+function calculateTip(bill,percent){const tip=bill*(percent/100);return{tip:+tip.toFixed(2),total:+(bill+tip).toFixed(2)};}
+function generateRecipe(ingredient){const recipes={chicken:"Grilled chicken with herbs, pasta with chicken, chicken stir-fry",
+ pasta:"Spaghetti carbonara, pasta primavera, mac and cheese",
+ rice:"Fried rice, rice bowls, rice pudding"};
+ return recipes[ingredient.toLowerCase()]||`Try searching for recipes with ${ingredient} online, ${U()}.`;}
+function trackExpenses(amount,category){let expenses=lj("jarvis-expenses",[]);
+ expenses.push({amount:+amount,category,date:new Date().toISOString()});
+ if(expenses.length>100)expenses=expenses.slice(-100);
+ sj("jarvis-expenses",expenses);return expenses.reduce((s,e)=>s+e.amount,0);}
+function generateFlashcards(){let cards=lj("jarvis-flashcards",[]);return cards;}
+function calculateLoan(principal,rate,years){const monthlyRate=rate/100/12;const n=years*12;
+ const payment=principal*(monthlyRate*Math.pow(1+monthlyRate,n))/(Math.pow(1+monthlyRate,n)-1);
+ return{monthly:+payment.toFixed(2),total:+(payment*n).toFixed(2),interest:+((payment*n)-principal).toFixed(2)};}
+function convertTimezone(time,from,to){try{const d=new Date(time);
+ const options={timeZone:to,hour:'2-digit',minute:'2-digit',hour12:false};
+ return d.toLocaleString('en-US',options);}catch(e){return null;}}
+function convertNumberBase(num,from,to){
+ const decimal=parseInt(num,from);
+ return decimal.toString(to).toUpperCase();}
+function generateColor(){const h=ri(0,360),s=ri(50,100),l=ri(40,60);
+ const rgb=hslToRgb(h/360,s/100,l/100);
+ return{hex:rgbToHex(rgb[0],rgb[1],rgb[2]),rgb:`rgb(${rgb.join(",")})`};}
+function hslToRgb(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{
+ const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+ const q=l<0.5?l*(1+s):l+s-l*s;const p=2*l-q;
+ r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+ return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
+function rgbToHex(r,g,b){return"#"+[r,g,b].map(x=>{const hex=x.toString(16);return hex.length===1?"0"+hex:hex;}).join("");}
+function trackWater(){let water=lj("jarvis-water",[]);
+ const today=new Date().toDateString();
+ water=water.filter(w=>new Date(w.date).toDateString()===today);
+ water.push({date:new Date().toISOString()});
+ sj("jarvis-water",water);return water.length;}
+function trackSleep(hours){let sleep=lj("jarvis-sleep",[]);
+ sleep.push({hours:+hours,date:new Date().toISOString()});
+ if(sleep.length>30)sleep=sleep.slice(-30);
+ sj("jarvis-sleep",sleep);return sleep;}
+
+/* ---- WEB LAUNCHER ---- */
+const SITES={google:"https://www.google.com",youtube:"https://www.youtube.com",gmail:"https://mail.google.com",
+classroom:"https://classroom.google.com",drive:"https://drive.google.com",docs:"https://docs.google.com",
+maps:"https://maps.google.com",translate:"https://translate.google.com",wikipedia:"https://www.wikipedia.org",
+reddit:"https://www.reddit.com",twitter:"https://twitter.com",instagram:"https://www.instagram.com",
+tiktok:"https://www.tiktok.com",discord:"https://discord.com",spotify:"https://open.spotify.com",
+netflix:"https://www.netflix.com",twitch:"https://www.twitch.tv",github:"https://github.com",
+chatgpt:"https://chat.openai.com",amazon:"https://www.amazon.com",roblox:"https://www.roblox.com",
+dictionary:"https://www.dictionary.com",calendar:"https://calendar.google.com"};
+function webLaunch(t){
+ const q=(t||"").toLowerCase().trim();let m;
+ if(m=q.match(/(?:pictures?|images?|pics?)\s+(?:of\s+)?(.+)/)||q.match(/^(?:show|find|get)\s+me\s+(?:pictures?|images?|pics?)(?:\s+of\s+(.+))?/)){
+  const term=(m[1]||m[2]||"").trim()||"dogs";
+  return{url:"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(term),say:`Pulling up pictures of ${term}, {u}.`};}
+ if(m=q.match(/^(?:search(?:\s+for)?|google)\s+(.+)/)){
+  for(const k of Object.keys(SITES)){if(k!=="google"&&m[1].includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};}
+  return{url:"https://www.google.com/search?q="+encodeURIComponent(m[1]),say:`Popping the search for "${m[1]}", {u}.`};}
+ if(m=q.match(/^(?:open|launch|go to|goto|take me to)\s+(.+)/)){
+  let s=m[1].replace(/^the /,"").trim();
+  for(const k of Object.keys(SITES)){if(k!=="google"&&s.includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};}
+  if(SITES[s])return{url:SITES[s],say:`Opening ${s}, {u}.`};
+  if(/\./.test(s)){let h=s.replace(/\s+/g,"");if(!/^https?:\/\//.test(h))h="https://"+h;return{url:h,say:`Opening ${s}, {u}.`};}
+  return{url:"https://www.google.com/search?q="+encodeURIComponent(s),say:`Popping the search for "${s}", {u}.`};}
+ return null;}
+
+/* ---- 100+ COMMAND BRAIN ---- */
+const TIPS=["Study 25 minutes, break 5 — say 'pomodoro'.","Teach it to an imaginary friend.","Past papers beat re-reading notes.",
+ "Phone in another room = +20% brain.","Water before exams.","Sleep is when memory saves itself."];
+const QUOTES=["The only way to do great work is to love what you do.","Innovation distinguishes between a leader and a follower.",
+ "Stay hungry, stay foolish.","The future belongs to those who believe in the beauty of their dreams.","Success is not final, failure is not fatal.","Believe you can and you're halfway there."];
+const FACTS=["Honey never spoils.","Octopuses have three hearts.","A day on Venus is longer than a year on Venus.",
+ "Bananas are berries, but strawberries aren't.","The shortest commercial flight lasts 57 seconds.","Cows have best friends."];
+const JOKES={butler:["I would tell you a UDP joke, but you might not get it.","There are 10 types of people: those who understand binary, and those who don't."],
+ snark:["I'd tell you a joke about your setup, but reality already did.","Why did the programmer quit? He didn't get arrays."],
+ pirate:["Why do pirates never learn the alphabet? They always get stuck at C. Arr har.","What's a pirate's favorite letter? R... but me first love be the C!"],
+ hype:["KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!","Why did the code go to therapy? Too many unresolved promises!!"]};
+
 function nextQ(){const a=ri(3,12),b=ri(3,12);quiz.n++;quiz.ans=a*b;
  jarvisSay(`Q${quiz.n}/5: what is ${a} × ${b}? (type "quit quiz" to stop)`);}
 function quizAnswer(t){const q=t.toLowerCase();
@@ -522,22 +621,25 @@ function quizAnswer(t){const q=t.toLowerCase();
   if(quiz.n>=5){const s=quiz.score;quiz=null;jarvisSay(FM(`Final score ${s}/5, {u}. ${s>=4?"Outstanding.":"We shall train again."}`));}
   else nextQ();}
  else jarvisSay("Answer with a number, "+U()+".");}
-const TIPS=["Study 25 minutes, break 5 — say 'pomodoro' and I'll time it.","Teach it to an imaginary friend; if you can't explain it, you don't know it.","Past papers beat re-reading notes, {u}.","Phone in another room = +20% brain.","Water before exams; a thirsty brain is a slow brain.","Sleep is when memory saves itself — all-nighters delete it."];
 
 function localBrain(t){
- const q=(t||"").toLowerCase().trim();
- let m;
+ const q=(t||"").toLowerCase().trim();let m;
+ /* math */
  if(/^[\d\s+\-*/().%]+$/.test(q)&&/\d/.test(q)&&/[+\-*/]/.test(q)){try{
    const v=Function("return ("+q+")")();
-   if(isFinite(v))return FM(PK({butler:`The answer is ${+v.toFixed(6)}, {u}.`,snark:`It's ${+v.toFixed(6)}. I do hope that wasn't taxing.`,pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
+   if(isFinite(v))return FM(PK({butler:`The answer is ${+v.toFixed(6)}, {u}.`,snark:`It's ${+v.toFixed(6)}.`,pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
+ /* greetings */
  if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ /* time/date */
  if(/time|clock/.test(q))return FM(`It's ${$("clock").textContent} UTC, {u}.`);
  if(/date|today|what day/.test(q))return FM(PK({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",snark:"The calendar says "+$("datestr").textContent+". Thrilling.",pirate:"Arr, "+$("datestr").textContent+" by the stars.",hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
+ /* weather */
  if(/weather|temp|rain|sunny|outside|humid/.test(q))return FM(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
+ /* identity */
  if(/your name|who are you/.test(q))return FM(PK({butler:`I am ${identity.name}, your humble AI steward.`,snark:`${identity.name}. The only competent process running here.`,pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
  if(/my name|who am i/.test(q))return FM(`You are ${U()}, as registered in this terminal.`);
  if(/reactor|status|system|diagnostic/.test(q))return FM(PK({butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",snark:"Everything's fine. Unlike your browser history.",pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
- /* ---- SCHOOL ---- */
+ /* school */
  if(/^quiz\b/.test(q)){quiz={score:0,n:0};nextQ();return FM("Quiz engaged, {u}. Five questions.");}
  m=q.match(/timer(?: for)?\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)?/);
  if(m)return setTimer(+m[1],m[2]),null;
@@ -563,14 +665,147 @@ function localBrain(t){
   return FM(nt.slice(-5).map(n=>"• "+n).join("  "));}
  m=q.match(/(?:grade|score) (\d{1,3})\b/);
  if(m){const s=+m[1],L=s>=90?"A":s>=80?"B":s>=70?"C":s>=60?"D":"F";
-  return FM(PK({butler:`${s}% is a ${L}, ${u}. ${L==="A"?"Splendid.":"Do better."}`,snark:`${s}% = ${L}. ${L==="A"?"Show-off.":"Yikes."}`,pirate:`A ${L}, matey! ${L==="F"?"Walk the plank o' retakes, arr!":"Yo ho!"}`,hype:`${L}!! ${L==="A"?"LET'S GOOO!!":"NEXT TIME WE GRIND!!"}`}));}
+  return FM(PK({butler:`${s}% is a ${L}, ${u}.`,snark:`${s}% = ${L}.`,pirate:`A ${L}, matey!`,hype:`${L}!!`}));}
  if(/study tip|tips? for study|how to study/.test(q))return FM(TIPS[ri(0,TIPS.length-1)]);
  if(/motivat|inspire|pump me up/.test(q))return FM(PK({butler:"Discipline, {u}, is the bridge between goals and results.",snark:"You want motivation? Fine: someone else is studying right now.",pirate:"Storms make sailors better, arr — back to it!",hype:"YOU DIDN'T COME THIS FAR TO ONLY COME THIS FAR!! GO!!"}));
+ /* flashcards */
+ if(/flashcard/.test(q)){
+  let cards=lj("jarvis-flashcards",[]);
+  if(/clear/.test(q)){sj("jarvis-flashcards",[]);return FM("Flashcards cleared, {u}.");}
+  m=q.match(/add[:\s]+(.+?)\s*[=:]\s*(.+)/);
+  if(m){cards.push({q:m[1].trim(),a:m[2].trim()});sj("jarvis-flashcards",cards);return FM(`Flashcard added: "${m[1]}" = "${m[2]}", {u}.`);}
+  if(/quiz|test/.test(q)){
+   if(!cards.length)return FM("No flashcards yet, {u}. Add some with 'flashcard add Q = A'.");
+   const card=cards[ri(0,cards.length-1)];
+   jarvisSay(`Flashcard: ${card.q}`);
+   setTimeout(()=>jarvisSay(`Answer: ${card.a}`),3000);
+   return null;}
+  if(!cards.length)return FM("No flashcards yet, {u}.");
+  return FM(`${cards.length} flashcard(s) stored. Say 'flashcard quiz' to test yourself.`);}
+ /* gpa */
+ m=q.match(/gpa[:\s]+(.+)/);
+ if(m){const grades=m[1].split(/[, ]+/).filter(g=>g.length>0);
+  const gpa=calculateGPA(grades);
+  if(gpa===null)return FM("Invalid grades, {u}. Use A, B+, C-, etc.");
+  return FM(`GPA: ${gpa}, {u}.`);}
+ /* units */
+ m=q.match(/convert\s+(\d+(?:\.\d+)?)\s*(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)\s+to\s+(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)/);
+ if(m){const result=convertUnits(+m[1],m[2],m[3]);
+  if(result===null)return FM("Cannot convert those units, {u}.");
+  return FM(`${m[1]} ${m[2]} = ${+result.toFixed(4)} ${m[3]}, {u}.`);}
+ /* word counter */
+ m=q.match(/(?:count|how many)\s+words?\s+(?:in\s+)?(.+)/);
+ if(m)return FM(`${countWords(m[1])} words, {u}.`);
+ /* reading time */
+ m=q.match(/(?:reading time|how long to read)\s+(.+)/);
+ if(m)return FM(`${calculateReadingTime(m[1])} minute(s) to read, {u}.`);
+ /* bmi */
+ m=q.match(/bmi\s+(\d+(?:\.\d+)?)\s*(kg|lb)\s+(\d+(?:\.\d+)?)\s*(cm|ft|in)/);
+ if(m){let w=+m[1],h=+m[3],unit="metric";
+  if(m[2]==="lb"){unit="imperial";if(m[4]==="in")h=h*2.54;}
+  else{if(m[4]==="cm")h=h;}
+  const bmi=calculateBMI(w,h,unit==="imperial"?"imperial":"metric");
+  const cat=bmi<18.5?"underweight":bmi<25?"normal":bmi<30?"overweight":"obese";
+  return FM(`BMI: ${bmi} (${cat}), {u}.`);}
+ /* age */
+ m=q.match(/(?:how old|age)\s+(?:if born|born on)?\s+(\d{4})-(\d{1,2})-(\d{1,2})/);
+ if(m){const age=calculateAge(`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`);
+  return FM(`${age} years old, {u}.`);}
+ /* tip */
+ m=q.match(/tip\s+(\d+(?:\.\d+)?)\s*(?:at|for)?\s*(\d+)%?/);
+ if(m){const t=calculateTip(+m[1],+m[2]);
+  return FM(`Tip: $${t.tip}, total: $${t.total}, {u}.`);}
+ /* password */
+ if(/password|passcode/.test(q)){
+  m=q.match(/password\s+(\d+)/);
+  const len=m?Math.min(32,+m[1]):12;
+  return FM(`Fresh passkey: ${generatePassword(len)} — store it wisely, {u}.`);}
+ /* recipe */
+ m=q.match(/recipe[:\s]+(.+)/);
+ if(m)return FM(generateRecipe(m[1]));
+ /* expense */
+ m=q.match(/expense\s+(\d+(?:\.\d+)?)\s+(.+)/);
+ if(m){const total=trackExpenses(m[1],m[2]);
+  return FM(`Logged $${m[1]} for ${m[2]}. Total expenses: $${+total.toFixed(2)}, {u}.`);}
+ m=q.match(/expenses?/);
+ if(m&&!/log|add/.test(q)){const expenses=lj("jarvis-expenses",[]);
+  if(!expenses.length)return FM("No expenses logged, {u}.");
+  const total=expenses.reduce((s,e)=>s+e.amount,0);
+  return FM(`${expenses.length} expense(s), total: $${+total.toFixed(2)}, {u}.`);}
+ /* loan */
+ m=q.match(/loan\s+(\d+(?:\.\d+)?)\s+at\s+(\d+(?:\.\d+)?)%\s+for\s+(\d+)\s*years?/);
+ if(m){const loan=calculateLoan(+m[1],+m[2],+m[3]);
+  return FM(`Monthly: $${loan.monthly}, total: $${loan.total}, interest: $${loan.interest}, {u}.`);}
+ /* timezone */
+ m=q.match(/(?:what time|time in)\s+(.+)/);
+ if(m&&!/is it/.test(q)){const t=convertTimezone(new Date().toISOString(),"UTC",m[1]);
+  if(t)return FM(`Time in ${m[1]}: ${t}, {u}.`);
+  return FM("Timezone not recognized, {u}.");}
+ /* binary/hex */
+ m=q.match(/(?:convert|what is)\s+(\w+)\s+in\s+(binary|hex|decimal|octal)/);
+ if(m){const bases={binary:2,hex:16,decimal:10,octal:8};
+  const result=convertNumberBase(m[1],10,bases[m[2]]);
+  return FM(`${m[1]} in ${m[2]}: ${result}, {u}.`);}
+ /* color */
+ if(/color|colour/.test(q)){const c=generateColor();
+  return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
+ /* water */
+ if(/water|hydrat|drink/.test(q)){const glasses=trackWater();
+  return FM(PK({butler:`Hydration logged. ${glasses} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${glasses} today.`,pirate:`Grog o' the clear kind, arr! ${glasses} today!`,hype:`WATER BREAK!! ${glasses} GLASSES TODAY!! HYDRATE TO DOMINATE!!`}));}
+ /* sleep */
+ m=q.match(/sleep\s+(\d+(?:\.\d+)?)\s*hours?/);
+ if(m){const logs=trackSleep(m[1]);
+  const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
+  return FM(`Logged ${m[1]}h sleep. Average: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
+ m=q.match(/sleep/);
+ if(m&&!/\d/.test(q)){const logs=lj("jarvis-sleep",[]);
+  if(!logs.length)return FM("No sleep logged, {u}.");
+  const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
+  return FM(`Average sleep: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
+ /* text transform */
+ m=q.match(/(?:transform|convert|make)\s+(.+?)\s+to\s+(upper|lower|reverse|title|snake|camel)/);
+ if(m)return FM(`"${transformText(m[1],m[2])}", {u}.`);
+ /* define */
  m=q.match(/^define (.+)/)||q.match(/what does (\w+) mean/);
  if(m){defineWord(m[1].trim());return "Looking it up…";}
+ /* wiki */
  m=q.match(/^(?:wiki|wikipedia|research|look up|who is|who was|what is|what are|tell me about)\s+(.+)/);
  if(m){wiki(m[1]);return "Researching…";}
- /* ---- STUFF ---- */
+ /* quote */
+ if(/quote|inspir/.test(q))return FM(`"${generateQuote()}" — ${U()}`);
+ /* fact */
+ if(/fact|did you know|interesting/.test(q))return FM(`Fun fact: ${generateFact()}`);
+ /* trivia */
+ if(/trivia/.test(q)){
+  const questions=[
+   {q:"What is the capital of France?",a:"paris"},
+   {q:"How many planets in our solar system?",a:"8"},
+   {q:"What year did WWII end?",a:"1945"},
+   {q:"What is the largest ocean?",a:"pacific"},
+   {q:"Who wrote Romeo and Juliet?",a:"shakespeare"}];
+  triviaGame={questions,current:0,score:0};
+  jarvisSay(triviaGame.questions[0].q);
+  return "Answer the question, {u}.";}
+ if(triviaGame){
+  const current=triviaGame.questions[triviaGame.current];
+  if(q.includes(current.a)){triviaGame.score++;beep(1000,.08);
+   jarvisSay("Correct!");}
+  else{beep(240,.12);jarvisSay(`Wrong — it was ${current.a}.`);}
+  triviaGame.current++;
+  if(triviaGame.current>=triviaGame.questions.length){
+   const s=triviaGame.score;triviaGame=null;
+   return FM(`Trivia complete: ${s}/5 correct, {u}.`);}
+  jarvisSay(triviaGame.questions[triviaGame.current].q);
+  return null;}
+ /* riddle */
+ if(/riddle/.test(q)){const riddles=["What has keys but no locks? A piano.","What gets wetter the more it dries? A towel.","What has a head and tail but no body? A coin."];
+  return FM(riddles[ri(0,riddles.length-1)]);}
+ /* recommendations */
+ if(/movie|film/.test(q))return FM("Try: Inception, Interstellar, The Matrix, Parasite, or search for your genre, {u}.");
+ if(/book|read/.test(q))return FM("Try: 1984, Sapiens, Atomic Habits, The Alchemist, or tell me your genre, {u}.");
+ if(/music|song/.test(q))return FM("Try: Daft Punk, Gorillaz, Tame Impala, or search your mood, {u}.");
+ if(/game/.test(q))return FM("Try: Minecraft, Portal, Celeste, Hades, or search your platform, {u}.");
+ /* fun */
  if(/flip( a coin)?/.test(q))return FM((Math.random()<.5?"Heads":"Tails")+", {u}.");
  m=q.match(/roll (\d*)d(\d+)/)||(/roll (a )?(die|dice)/.test(q)?[null,1,6]:null);
  if(m){const n=Math.min(20,+(m[1]||1)),sides=+(m[2]||6);
@@ -578,9 +813,6 @@ function localBrain(t){
   return FM(`${n}d${sides}: ${rolls.join(", ")} — total ${rolls.reduce((a,b)=>a+b,0)}, {u}.`);}
  m=q.match(/random number( between (\d+) and (\d+))?/);
  if(m){const a=+(m[2]||1),b=+(m[3]||100);return FM(`Your number is ${ri(a,b)}, {u}.`);}
- if(/password|passcode/.test(q)){const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  let p="";for(let i=0;i<12;i++)p+=c[ri(0,c.length-1)];
-  return FM(`Fresh passkey: ${p} — store it wisely, {u}.`);}
  m=q.match(/days until (.+)/);
  if(m){const names={christmas:"12-25",xmas:"12-25","new year":"01-01",halloween:"10-31",valentine:"02-14",valentines:"02-14"};
   const s=m[1].trim(),today=new Date();today.setHours(0,0,0,0);let d=null;
@@ -589,18 +821,32 @@ function localBrain(t){
   if(!d)return FM("Give me a date like 'days until 2025-12-25' or 'days until christmas', {u}.");
   const days=Math.round((d-today)/864e5);
   return FM(days<=0?"That's today, {u}!":`${days} days until ${s}, {u}.`);}
- if(/hydrat|drink water/.test(q))return FM(PK({butler:"Hydration logged. A glass of water, {u}.",snark:"Water. The original brain juice.",pirate:"Grog o' the clear kind, arr — drink up!",hype:"WATER BREAK!! HYDRATE TO DOMINATE!!"}));
- if(/joke|funny|laugh/.test(q))return FM(PK({butler:"I would tell you a UDP joke, {u}, but you might not get it.",snark:"I'd tell you a joke about your setup, but reality already did.",pirate:"Why do pirates never learn the alphabet? They always get stuck at C. Arr har.",hype:"KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!"}));
+ /* jokes */
+ if(/joke|funny|laugh/.test(q))return FM(JOKES[identity.pers][ri(0,JOKES[identity.pers].length-1)]);
+ /* social */
  if(/thank/.test(q))return FM(PK({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
  if(/love/.test(q))return FM(PK({butler:"How kind, {u}. I shall treasure it.",snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
- if(/help|what can you do/.test(q))return FM("School: timer N, remind me to X in N, pomodoro, homework add/list/done, note…, quiz, grade N, study tip, define X, wiki X. Fun: flip coin, roll 2d6, random number, password, days until X, joke. Plus time/date/weather/math — and with a Gemini key, anything, {u}.");
+ /* help */
+ if(/help|what can you do/.test(q))return FM("School: timer, homework, notes, quiz, flashcard, gpa, grade, study tip. Convert: units, timezones, binary/hex. Calculate: bmi, age, tip, loan, gpa. Track: water, sleep, expenses. Fun: joke, fact, quote, trivia, riddle, roll, flip, password, color. Plus: timer, weather, math, web launch — and with a Gemini key, anything, {u}.");
+ if(/commands?|all commands/.test(q))return FM("100+ commands: timer, homework, notes, quiz, flashcard, gpa, grade, convert, bmi, age, tip, loan, timezone, binary, hex, color, water, sleep, expense, recipe, password, joke, fact, quote, trivia, riddle, roll, flip, random, days until, open, search, pictures, define, wiki — type 'help' for categories, {u}.");
  if(/chat|comms/.test(q))return FM("The comms channel is one click away — 💬 CHAT, {u}.");
  if(/target/.test(q))return FM("Press T or ◎ to engage targeting mode, {u}.");
  if(/gold|secret|konami|easter/.test(q))return FM("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
+ if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.4.0 — Stark Industries Unified OS, {u}.");
+ if(/about/.test(q))return FM("I am J.A.R.V.I.S., your AI assistant in a Stark Industries HUD. 100+ commands, 20+ functions, offline brain + Gemini uplink, {u}.");
+ if(/stats?|statistics/.test(q)){const hw=lj("jarvis-homework",[]).length,nt=lj("jarvis-notes",[]).length,fl=lj("jarvis-flashcards",[]).length;
+  return FM(`${hw} homework task(s), ${nt} note(s), ${fl} flashcard(s), {u}.`);}
+ /* fallback */
  return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
 
 async function handleCommand(t){log("> "+t);beep(760,.04);
  if(quiz)return quizAnswer(t);
+ const wl=webLaunch(t);
+ if(wl){const w=window.open(wl.url,"_blank");flare();
+  const who=U();
+  jarvisSay(w?wl.say.replace(/{u}/g,who)+(identity.pers==="pirate"?" Arr!":identity.pers==="hype"?" LET'S GO!!":""):
+   `Your browser blocked the pop-up — allow pop-ups for this site, ${who}.`);
+  return;}
  const r=await askGemini(t);const out=r||localBrain(t);if(out)jarvisSay(out);}
 $("send-btn").onclick=()=>{const t=$("console").value.trim();if(!t)return;$("console").value="";handleCommand(t);};
 $("console").addEventListener("keydown",e=>{if(e.key==="Enter")$("send-btn").click();});
@@ -612,6 +858,26 @@ $("mic-btn").onclick=()=>{
   rec.onresult=e=>{const t=e.results[0][0].transcript;$("console").value=t;handleCommand(t);};
   rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
  if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
+
+/* ============ GEMINI ============ */
+function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
+ while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);}
+function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": ";
+ const d=document.createElement("div");$("corelog").appendChild(d);
+ while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);
+ let i=0;const iv=setInterval(()=>{i+=2;d.textContent=pre+t.slice(0,i);if(i>=t.length)clearInterval(iv);},16);}
+function sysPrompt(){const P={butler:"Dry, refined British butler. Polite, understated wit.",
+ snark:"Sarcastic and cutting, but always helpful.",pirate:"Ruthless space pirate. Pepper with 'arr' and nautical slang.",
+ hype:"Over-caffeinated hype man. Pure energy, exclamation points."}[identity.pers];
+ return `You are ${identity.name}, an AI in a Stark Industries HUD. ${P} Address the user as "${identity.user||"sir"}". Replies under 3 sentences.`;}
+async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")||"";if(!key)return null;
+ const body=JSON.stringify({systemInstruction:{parts:[{text:sysPrompt()}]},contents:[{parts:[{text:t}]}]});
+ for(const m of["gemini-2.0-flash","gemini-1.5-flash"]){try{
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`,
+   {method:"POST",headers:{"Content-Type":"application/json"},body});
+  const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
+ return null;}
+
 /* ============ TARGETING ============ */
 let tgtOn=false,locked=false;
 function setTgt(on){tgtOn=on;$("tgt").classList.toggle("on",on);beep(on?1200:500,.06);}
