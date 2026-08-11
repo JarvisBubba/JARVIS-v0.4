@@ -103,9 +103,8 @@ canvas{width:100%;display:block}
 <body>
 <div id="scan"></div>
 
-<div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK TO SKIP ▸</div></div>
+<div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
-<!-- ============ SIGN UP / SIGN IN ============ -->
 <div id="gate" class="overlay hidden">
  <div class="gpanel panel" id="gpanel">
   <h2>ACCESS TERMINAL</h2>
@@ -148,7 +147,6 @@ canvas{width:100%;display:block}
  </div>
 </div>
 
-<!-- ============ SETTINGS ============ -->
 <div id="settings" class="overlay hidden">
  <div class="modal panel">
   <h2>SETTINGS — IDENTITY</h2>
@@ -172,7 +170,6 @@ canvas{width:100%;display:block}
  </div>
 </div>
 
-<!-- ============ ADMIN ============ -->
 <div id="admin" class="overlay hidden">
  <div class="modal panel">
   <h2>ADMIN DASHBOARD</h2>
@@ -184,11 +181,9 @@ canvas{width:100%;display:block}
  </div>
 </div>
 
-<!-- ============ TARGETING ============ -->
 <div id="tgt"><div class="ln" id="tx"></div><div class="ln" id="ty"></div><div id="tring"></div>
  <div id="tread">TGT-MODE v2.4 · X: <span id="t-x">0000</span> Y: <span id="t-y">0000</span> · RANGE: <span id="t-range">--</span> · LOCK: <span id="t-lock">--</span> · [T] OR ◎ TO DISENGAGE</div></div>
 
-<!-- ============ HUD ============ -->
 <div id="hud">
  <header id="top" class="panel">
   <div class="badge"><div class="avatar"></div>
@@ -267,7 +262,6 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const sj=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0ff";
-
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
 
 /* sound */
@@ -284,7 +278,7 @@ function speak(t){
   speechSynthesis.speak(u);}
 function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);}
 
-/* ============ BOOT (freeze-proof) ============ */
+/* ============ BOOT (FREEZE-PROOF) ============ */
 const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
 "NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
@@ -293,14 +287,12 @@ let bootDone=false;
 function finishBoot(){
   if(bootDone)return;bootDone=true;
   const b=$("boot");
-  const next=()=>{try{ if(typeof route==="function")route();else checkGate(); }catch(e){console.error(e);}};
+  const next=()=>{try{checkGate();}catch(e){console.error(e);}};
   if(!b)return next();
   b.style.transition="opacity .6s";b.style.opacity="0";
   setTimeout(()=>{b.remove();next();},650);}
-/* skip = click OR any key, instantly */
 $("boot").addEventListener("click",finishBoot);
 window.addEventListener("keydown",finishBoot,{once:true});
-/* failsafe: even if everything breaks, boot ends by 6s */
 setTimeout(finishBoot,6000);
 (async()=>{try{
   for(const L of bootLines){
@@ -330,9 +322,9 @@ $("gi-go").onclick=()=>{
  const n=$("gi-name").value.trim(),p=$("gi-pass").value;
  if(users[n]&&users[n].pass===p){session=n;localStorage.setItem("jarvis-session",n);beep(1040,.1);unlock();}
  else{$("gi-err").textContent="ACCESS DENIED — credentials not recognized.";shake();beep(180,.2,"sawtooth");}};
-$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();};
+$("gi-pass").addEventListener("keydown",e=>{if(e.key==="Enter")$("gi-go").click();});
 
-$("ca-go").onclick=()=>{ /* SIGN UP */
+$("ca-go").onclick=()=>{
  const n=$("ca-name").value.trim(),p=$("ca-pass").value;
  if(n.length<2||p.length<2)return $("ca-err").textContent="Callsign & passkey: 2+ chars.";
  if(MODE()!=="everyone")return $("ca-err").textContent="Restricted — submit an access request instead.";
@@ -498,7 +490,7 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
-function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",e
+function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",
  snark:"Wow, great question. Shame my Gemini uplink isn't configured. Settings → key.",
  pirate:"Arr, the crystal ball be dark! Feed me a Gemini key in settings, matey.",
  hype:"NO KEY NO PROBLEM!! Configure the Gemini uplink and we go AGAIN!!"};
