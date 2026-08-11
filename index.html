@@ -284,21 +284,33 @@ function speak(t){
   speechSynthesis.speak(u);}
 function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);}
 
-/* ============ BOOT ============ */
+/* ============ BOOT (freeze-proof) ============ */
 const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
-"SECURITY ................ STARK PROTOCOL","","BOOT COMPLETE — WAKE UP, SIR."];
-let skipBoot=false;
-$("boot").addEventListener("click",()=>skipBoot=true);
-(async()=>{
- for(const L of bootLines){if(skipBoot)break;
-  const d=document.createElement("div");d.textContent=L;$("bootlog").appendChild(d);
-  beep(300+Math.random()*300,.02,"sawtooth",.015);await wait(L?150:60);}
- if(skipBoot)$("bootlog").innerHTML=bootLines.join("<br>");
- await wait(500);
- $("boot").style.transition="opacity .7s";$("boot").style.opacity=0;
- setTimeout(()=>$("boot").remove(),750);
- checkGate();})();
+"NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
+"BOOT COMPLETE — WAKE UP, SIR."];
+let bootDone=false;
+function finishBoot(){
+  if(bootDone)return;bootDone=true;
+  const b=$("boot");
+  const next=()=>{try{ if(typeof route==="function")route();else checkGate(); }catch(e){console.error(e);}};
+  if(!b)return next();
+  b.style.transition="opacity .6s";b.style.opacity="0";
+  setTimeout(()=>{b.remove();next();},650);}
+/* skip = click OR any key, instantly */
+$("boot").addEventListener("click",finishBoot);
+window.addEventListener("keydown",finishBoot,{once:true});
+/* failsafe: even if everything breaks, boot ends by 6s */
+setTimeout(finishBoot,6000);
+(async()=>{try{
+  for(const L of bootLines){
+    if(bootDone)return;
+    const d=document.createElement("div");d.textContent=L;
+    $("bootlog").appendChild(d);beep(300+Math.random()*300,.02,"sawtooth",.015);
+    await wait(L?140:60);
+  }
+  await wait(400);
+}catch(e){console.error(e);}finally{finishBoot();}})();
 
 /* ============ SIGN UP / SIGN IN ============ */
 let users=lj("jarvis-users",{});
@@ -486,7 +498,7 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
-function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",
+function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",e
  snark:"Wow, great question. Shame my Gemini uplink isn't configured. Settings → key.",
  pirate:"Arr, the crystal ball be dark! Feed me a Gemini key in settings, matey.",
  hype:"NO KEY NO PROBLEM!! Configure the Gemini uplink and we go AGAIN!!"};
