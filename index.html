@@ -4,9 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>J.A.R.V.I.S.</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#3fd0ff">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--cy:#3fd0ff;--dim:color-mix(in srgb,var(--cy) 35%,transparent);--faint:color-mix(in srgb,var(--cy) 10%,transparent);--hot:#bfeaff;--panel:color-mix(in srgb,var(--cy) 6%,rgba(0,0,0,.75))}
+body[data-theme="gold"]{--cy:#ffc46b;--hot:#ffe9c4}
+body[data-theme="crimson"]{--cy:#ff5566;--hot:#ffd7dc}
+body[data-theme="green"]{--cy:#5dff9d;--hot:#d8ffe9}
 body.gold{--cy:#ffc46b;--hot:#ffe9c4}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -47,8 +52,10 @@ canvas{width:100%;display:block}
 #top nav{display:flex;gap:6px;align-items:center}
 #left{grid-area:left}#right{grid-area:right}
 #center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
-#reactor{width:min(46vh,410px);transition:filter .6s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cy) 45%,transparent))}
+#reactor{width:min(44vh,400px);transition:filter .6s;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--cy) 45%,transparent))}
 #reactor.flare{filter:drop-shadow(0 0 40px var(--cy)) brightness(1.9)}
+#reactor.talk{filter:drop-shadow(0 0 34px var(--cy)) brightness(1.5)}
+#reactor.low{filter:drop-shadow(0 0 6px var(--dim)) saturate(.5) brightness(.6)}
 .ring{transform-box:fill-box;transform-origin:center}
 .r1{animation:spin 70s linear infinite}.r2{animation:spin 26s linear infinite reverse}
 .r3{animation:spin 12s linear infinite}.r4{animation:spin 45s linear infinite reverse}
@@ -61,12 +68,15 @@ canvas{width:100%;display:block}
 #rlabel{text-align:center;letter-spacing:3px;font-size:11px}
 #rlabel b{color:var(--hot)}
 #console-wrap{width:min(94%,600px)}
-#corelog{height:80px;overflow:hidden;opacity:.9;font-size:11px;margin-bottom:5px;line-height:1.45}
+#corelog{height:76px;overflow:hidden;opacity:.9;font-size:11px;margin-bottom:5px;line-height:1.45}
 #crow{display:flex;gap:6px}
 #console{flex:1}
-#clock{font:700 32px Orbitron;letter-spacing:3px;text-shadow:0 0 14px var(--cy)}
+#sugg{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+#sugg .btn{padding:2px 8px;font-size:10px}
+#clock{font:700 30px Orbitron;letter-spacing:3px;text-shadow:0 0 14px var(--cy)}
 .wx{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
-.wx b{font:700 28px Orbitron;text-shadow:0 0 10px var(--cy)}
+.wx b{font:700 26px Orbitron;text-shadow:0 0 10px var(--cy)}
+#c-list{height:88px;overflow-y:auto;font-size:11px;border:1px solid var(--faint);padding:4px;margin-bottom:4px;scrollbar-width:thin}
 #foot{grid-area:foot;display:flex;align-items:center;justify-content:center;gap:18px}
 #foot::before,#foot::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--dim))}
 #foot::after{background:linear-gradient(90deg,var(--dim),transparent)}
@@ -75,7 +85,6 @@ canvas{width:100%;display:block}
 #boot{z-index:99;cursor:pointer;align-items:flex-start;justify-content:flex-start;padding:8vh 10vw}
 #bootlog{font-size:13px;line-height:1.7;text-shadow:0 0 8px var(--cy);white-space:pre-wrap}
 #boot .skip{position:absolute;bottom:24px;right:32px;opacity:.6;letter-spacing:2px}
-/* ---- TERMINAL LOGIN ---- */
 #term{width:min(860px,94vw);height:min(72vh,640px);display:flex;flex-direction:column;padding:14px 16px}
 #tlog{flex:1;overflow-y:auto;line-height:1.75;text-shadow:0 0 7px color-mix(in srgb,var(--cy) 60%,transparent);white-space:pre-wrap;scrollbar-width:thin}
 #tlog .echo{opacity:.85}
@@ -106,10 +115,8 @@ canvas{width:100%;display:block}
 </head>
 <body>
 <div id="scan"></div>
-
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
-<!-- TERMINAL LOGIN -->
 <div id="gate" class="overlay hidden">
  <div id="term" class="panel">
   <div id="tlog"></div>
@@ -134,6 +141,9 @@ canvas{width:100%;display:block}
   <div class="row">
    <button class="btn" id="set-test">TEST</button>
    <button class="btn" id="set-save">SAVE</button>
+   <button class="btn" id="set-export">EXPORT</button>
+   <button class="btn" id="set-import">IMPORT</button>
+   <input type="file" id="set-file" class="hidden" accept=".json">
    <button class="btn" id="set-logout">LOG OUT</button>
    <button class="btn" id="set-close">CLOSE</button>
   </div>
@@ -148,6 +158,7 @@ canvas{width:100%;display:block}
    <select id="adm-mode"><option value="everyone">EVERYONE ALLOWED</option><option value="restricted">RESTRICTED</option></select></div>
   <h2 style="margin-top:10px">ACCESS REQUESTS</h2><div id="adm-req"></div>
   <h2 style="margin-top:10px">USER CONTROL</h2><div id="adm-users"></div>
+  <h2 style="margin-top:10px">ACTIVITY LOG</h2><div id="adm-log"></div>
   <div class="row" style="margin-top:12px"><button class="btn" id="adm-close">CLOSE</button></div>
  </div>
 </div>
@@ -161,11 +172,13 @@ canvas{width:100%;display:block}
    <div><b>J.A.R.V.I.S.</b><small>USER: <span id="badge-user">—</span></small></div></div>
   <div>⚠ STARK PROTOCOL · CORE: <b id="corestate">ONLINE</b> · UPLINK: <b id="uplinkstate">OFFLINE</b> · <span id="utcmini">--:--:--</span> UTC</div>
   <nav>
-   <button class="btn" id="btn-tgt" title="Targeting [T]">◎ TARGET</button>
+   <button class="btn" id="btn-wake" title="Wake word">🎙</button>
+   <button class="btn" id="btn-theme" title="Theme">🎨</button>
+   <button class="btn" id="btn-tgt" title="Targeting [T]">◎</button>
    <button class="btn" id="btn-snd">🔊</button>
    <button class="btn hidden" id="btn-admin">ADMIN</button>
-   <button class="btn" id="btn-set">⚙ SETTINGS</button>
-   <a class="btn" href="chat.html">💬 CHAT</a>
+   <button class="btn" id="btn-set">⚙</button>
+   <a class="btn" href="chat.html">💬</a>
   </nav>
  </header>
 
@@ -175,10 +188,10 @@ canvas{width:100%;display:block}
    <div class="kv"><span>THRUSTERS</span><b>STBY</b></div>
    <div class="kv"><span>AUX SYSTEMS</span><b>OK</b></div></section>
   <section class="panel"><h3>DATA BUS</h3><canvas id="g-bus" width="270" height="52"></canvas></section>
-  <section class="panel"><h3>PROXIMITY SCAN</h3><canvas id="radar" width="270" height="160"></canvas>
+  <section class="panel"><h3>PROXIMITY SCAN</h3><canvas id="radar" width="270" height="150"></canvas>
    <div class="kv"><span>CONTACTS</span><b>2</b></div>
    <div class="kv"><span>THREAT</span><b>NONE</b></div></section>
-  <section class="panel"><h3>CIPHER FEED</h3><div id="cipher" style="font-size:10px;line-height:1.6;opacity:.8;height:88px;overflow:hidden"></div></section>
+  <section class="panel"><h3>CIPHER FEED</h3><div id="cipher" style="font-size:10px;line-height:1.6;opacity:.8;height:80px;overflow:hidden"></div></section>
  </aside>
 
  <main id="center">
@@ -189,6 +202,7 @@ canvas{width:100%;display:block}
    <g class="ring r1">
     <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
     <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
+   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.5 · </textPath></text></g>
    <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
    <g class="ring r3">
     <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
@@ -202,35 +216,42 @@ canvas{width:100%;display:block}
   <div id="console-wrap" class="panel">
    <h3>COMMAND CONSOLE</h3>
    <div id="corelog"></div>
-   <div id="crow"><input id="console" placeholder="Ask JARVIS…" autocomplete="off">
-    <button class="btn" id="send-btn">SEND</button><button class="btn" id="mic-btn">🎤 MIC</button></div>
+   <div id="crow"><input id="console" placeholder="Ask JARVIS… (Tab = autocomplete, ↑ = history)" autocomplete="off">
+    <button class="btn" id="send-btn">SEND</button><button class="btn" id="mic-btn">🎤</button></div>
+   <div id="sugg"></div>
   </div>
  </main>
 
  <aside id="right" class="col">
   <section class="panel"><h3>CHRONO</h3><div id="clock">--:--:--</div>
-   <div class="kv"><span id="datestr">—</span><span>UTC</span></div></section>
+   <div class="kv"><span id="datestr">—</span><span>UTC</span></div>
+   <div class="kv"><span>NOW</span><b id="period">—</b></div></section>
   <section class="panel"><h3>ENVIRONMENT</h3>
    <div class="wx"><b id="temp">--°C</b><span id="cond">—</span></div>
-   <div class="kv"><span>EXTERNAL TEMP</span><b id="temp2">—</b></div>
    <div class="kv"><span>HUMIDITY</span><b id="hum">—</b></div>
    <div class="kv"><span>PRESSURE</span><b id="pres">—</b></div></section>
+  <section class="panel"><h3>COMMS · ONLINE: <span id="c-on" style="animation:none">1</span></h3>
+   <div id="c-list"></div>
+   <div class="row" style="margin:0 0 4px"><input id="c-name" placeholder="CALLSIGN" style="width:45%"><input id="c-chan" placeholder="CHANNEL" style="width:55%"></div>
+   <div class="row" style="margin:0"><input id="c-text" placeholder="Transmit…"><button class="btn" id="c-send">TX</button></div></section>
   <section class="panel"><h3>UPLINK ARRAY</h3>
    <div class="kv"><span>SAT-7</span><b>LINKED</b></div>
    <div class="kv"><span>ENCRYPT</span><b>AES-256</b></div>
    <div class="kv"><span>PACKETS</span><b id="pkt">0</b></div>
-   <canvas id="g-up" width="300" height="46"></canvas></section>
+   <canvas id="g-up" width="300" height="40"></canvas></section>
  </aside>
 
  <footer id="foot"><span>STARK INDUSTRIES</span></footer>
 </div>
 
+<script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
 const sj=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+document.body.dataset.theme=localStorage.getItem("jarvis-theme")||"cyan";
 let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0ff";
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
 let skip=false;
@@ -238,41 +259,47 @@ let skip=false;
 /* sound */
 let AC=null;
 function beep(f=880,d=.06,type="square",g=.05){
-  if(!identity.sounds)return;
-  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-   const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f;ga.gain.value=g;
-   o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+ if(!identity.sounds)return;
+ try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f;ga.gain.value=g;
+  o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
 function speak(t){
-  if(!identity.voice||!("speechSynthesis" in window))return;
-  const u=new SpeechSynthesisUtterance(t.replace(/[*_`#]/g,""));u.rate=1.02;u.pitch=.9;
-  const v=speechSynthesis.getVoices().find(v=>/en-GB/i.test(v.lang));if(v)u.voice=v;
-  speechSynthesis.speak(u);}
+ if(!identity.voice||!("speechSynthesis" in window))return;
+ const u=new SpeechSynthesisUtterance(t.replace(/[*_`#]/g,""));u.rate=1.02;u.pitch=.9;
+ const v=speechSynthesis.getVoices().find(v=>/en-GB/i.test(v.lang));if(v)u.voice=v;
+ u.onstart=()=>$("reactor").classList.add("talk");
+ u.onend=u.onerror=()=>$("reactor").classList.remove("talk");
+ speechSynthesis.speak(u);}
 function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);}
 
-/* ============ BOOT (FREEZE-PROOF) ============ */
-const bootLines=["STARK INDUSTRIES UNIFIED OS v0.4.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
+/* battery-aware reactor */
+if(navigator.getBattery)navigator.getBattery().then(b=>{
+ const upd=()=>$("reactor").classList.toggle("low",b.level<.25&&!b.charging);
+ upd();b.addEventListener("levelchange",upd);b.addEventListener("chargingchange",upd);}).catch(()=>{});
+
+/* ============ BOOT ============ */
+const bootLines=["STARK INDUSTRIES UNIFIED OS v0.5.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
 "NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
 "BOOT COMPLETE — WAKE UP, SIR."];
 let bootDone=false;
 function finishBoot(){
-  if(bootDone)return;bootDone=true;skip=true;
-  const b=$("boot");
-  const next=()=>{try{checkGate();}catch(e){console.error(e);}};
-  if(!b)return next();
-  b.style.transition="opacity .6s";b.style.opacity="0";
-  setTimeout(()=>{b.remove();next();},650);}
+ if(bootDone)return;bootDone=true;skip=true;
+ const b=$("boot");
+ const next=()=>{try{checkGate();}catch(e){console.error(e);}};
+ if(!b)return next();
+ b.style.transition="opacity .6s";b.style.opacity="0";
+ setTimeout(()=>{b.remove();next();},650);}
 $("boot").addEventListener("click",finishBoot);
 window.addEventListener("keydown",finishBoot,{once:true});
 setTimeout(finishBoot,6000);
 (async()=>{try{
-  for(const L of bootLines){
-    if(bootDone)return;
-    const d=document.createElement("div");d.textContent=L;
-    $("bootlog").appendChild(d);beep(300+Math.random()*300,.02,"sawtooth",.015);
-    await wait(L?140:60);
-  }
-  await wait(400);
+ for(const L of bootLines){
+  if(bootDone)return;
+  const d=document.createElement("div");d.textContent=L;
+  $("bootlog").appendChild(d);beep(300+Math.random()*300,.02,"sawtooth",.015);
+  await wait(L?140:60);}
+ await wait(400);
 }catch(e){console.error(e);}finally{finishBoot();}})();
 
 /* ============ TERMINAL LOGIN (BYRON = ONLY ADMIN) ============ */
@@ -283,6 +310,9 @@ Object.keys(users).forEach(n=>{users[n].role=isAdmin(n)?"admin":"user";});
 sj("jarvis-users",users);
 let session=localStorage.getItem("jarvis-session")||"";
 const MODE=()=>localStorage.getItem("jarvis-access-mode")||"everyone";
+
+function alog(ev){const L=lj("jarvis-log",[]);L.push({t:new Date().toISOString().slice(0,16).replace("T"," "),e:ev});
+ if(L.length>60)L.shift();sj("jarvis-log",L);}
 
 function tscroll(){$("tlog").scrollTop=$("tlog").scrollHeight;}
 function tline(text,cls){const d=document.createElement("div");if(cls)d.className=cls;
@@ -303,7 +333,6 @@ function tactions(list){$("tacts").innerHTML="";$("tacts").classList.remove("hid
  list.forEach(([l,f],i)=>{const b=document.createElement("button");b.className="btn"+(i===0?" hot":"");b.textContent=l;
   b.onclick=()=>{beep(700,.04);f();};$("tacts").appendChild(b);});}
 function shakeTerm(){const t=$("term");t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");}
-$("term").addEventListener("click",e=>{if(e.target===$("term")||e.target===$("tlog"))skip=true;});
 
 function checkGate(){
  if(session&&users[session])return unlock();
@@ -311,12 +340,10 @@ function checkGate(){
  if(localStorage.getItem("jarvis-pending-name"))return pendingView();
  if(Object.keys(users).length===0)return enroll(true);
  menu();}
-
 function menu(){
  tline("> SELECT OPERATION:");
  tline('ADMIN CLEARANCE: CALLSIGN "BYRON" ONLY',"dim");
  tactions([["[1] SIGN IN",signin],["[2] CREATE ACCOUNT",create],["[3] REQUEST ACCESS",request]]);}
-
 async function enroll(first){
  if(first)await ttype("> NO OPERATOR PROFILE FOUND — INITIATING ENROLLMENT PROTOCOL…","ok");
  let name;
@@ -337,10 +364,10 @@ async function enroll(first){
  await ttype("> WRITING OPERATOR PROFILE ..... OK");
  users[name]={pass:p1,role:isAdmin(name)?"admin":"user"};sj("jarvis-users",users);
  session=name;localStorage.setItem("jarvis-session",name);
+ alog("account created "+name);
  await ttype(`> PROFILE CREATED — WELCOME, ${name.toUpperCase()}`,"ok");
  if(isAdmin(name))return adminChoice();
  unlock();}
-
 async function signin(){
  const raw=(await task("> CALLSIGN:")).trim();
  const n=Object.keys(users).find(k=>k.toLowerCase()===raw.toLowerCase());
@@ -351,12 +378,11 @@ async function signin(){
   if(isAdmin(n))return adminChoice();
   unlock();}
  else{await ttype("!! ACCESS DENIED — CREDENTIALS NOT RECOGNIZED","err");beep(180,.2);shakeTerm();
+  alog("failed signin "+raw);
   tactions([["RETRY",signin],["BACK",menu]]);}}
-
 async function create(){
  if(MODE()!=="everyone"){await ttype("!! ACCESS MODE RESTRICTED — CONVERTING TO ACCESS REQUEST","err");return request();}
  enroll(false);}
-
 async function request(){
  const n=(await task("> CALLSIGN:")).trim();
  if(n.length<2){await ttype("!! CALLSIGN REQUIRED","err");return request();}
@@ -365,7 +391,6 @@ async function request(){
  reqs.push({name:n,pass:p,status:"pending"});sj("jarvis-requests",reqs);
  localStorage.setItem("jarvis-pending-name",n);
  pendingView();}
-
 let pollTimer=null;
 function pendingView(){
  tline("⏳ PENDING","ok");
@@ -384,12 +409,10 @@ function deniedView(){
  tline("⛔ DENIED","err");
  tline("Your request was denied by an admin.","dim");
  tactions([["SUBMIT NEW REQUEST",request],["BACK",menu]]);}
-
 function adminChoice(){
  ttype("> ADMIN PRIVILEGES DETECTED","ok");
  tactions([["CONTINUE ▸",unlock],["ADMIN DASHBOARD",openAdmin]]);}
 function openAdmin(){renderAdmin();$("admin").classList.remove("hidden");}
-
 function unlock(){
  if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
  $("gate").classList.add("hidden");
@@ -397,6 +420,7 @@ function unlock(){
  $("reactor").classList.add("online");
  $("reactor-state").textContent="ONLINE";
  if(isAdmin(session))$("btn-admin").classList.remove("hidden");
+ alog("signin "+session);
  flare();
  const h=new Date().getHours(),part=h<12?"morning":h<18?"afternoon":"evening";
  jarvisSay(`All systems online. Good ${part}, ${identity.user||session||"sir"}.`);
@@ -415,17 +439,19 @@ function renderAdmin(){
   const box=d.lastChild;
   if(r.status==="pending"){
    const a=document.createElement("button");a.className="btn";a.textContent="✔";
-   a.onclick=()=>{r.status="approved";users[r.name]={pass:r.pass,role:isAdmin(r.name)?"admin":"user"};sj("jarvis-requests",reqs);sj("jarvis-users",users);beep(900,.08);flare();renderAdmin();};
+   a.onclick=()=>{r.status="approved";users[r.name]={pass:r.pass,role:isAdmin(r.name)?"admin":"user"};sj("jarvis-requests",reqs);sj("jarvis-users",users);alog("approved "+r.name);beep(900,.08);flare();renderAdmin();};
    const x=document.createElement("button");x.className="btn";x.textContent="✖";
-   x.onclick=()=>{r.status="denied";sj("jarvis-requests",reqs);beep(200,.15,"sawtooth");renderAdmin();};
+   x.onclick=()=>{r.status="denied";sj("jarvis-requests",reqs);alog("denied "+r.name);beep(200,.15,"sawtooth");renderAdmin();};
    box.append(a,x);}
   $("adm-req").appendChild(d);});
  $("adm-users").innerHTML="";
  Object.keys(users).forEach(n=>{const d=document.createElement("div");d.className="kv";
   d.innerHTML=`<span>${n} <i style="opacity:.6">(${isAdmin(n)?"ADMIN":"user"})</i></span><span></span>`;
   if(!isAdmin(n)&&n!==session){const x=document.createElement("button");x.className="btn";x.textContent="✖";
-   x.onclick=()=>{delete users[n];sj("jarvis-users",users);renderAdmin();};d.lastChild.appendChild(x);}
-  $("adm-users").appendChild(d);});}
+   x.onclick=()=>{delete users[n];sj("jarvis-users",users);alog("deleted user "+n);renderAdmin();};d.lastChild.appendChild(x);}
+  $("adm-users").appendChild(d);});
+ const L=lj("jarvis-log",[]);
+ $("adm-log").innerHTML=L.slice(-15).reverse().map(x=>`<div class="kv"><span>${x.t}</span><b>${x.e}</b></div>`).join("")||'<div class="kv"><span>—</span><span>empty</span></div>';}
 
 /* ============ SETTINGS ============ */
 $("btn-set").onclick=()=>{
@@ -448,11 +474,33 @@ $("set-test").onclick=async()=>{
  const r=await askGemini("Reply with exactly: UPLINK ONLINE.");
  $("set-stat").textContent=r?"✔ "+r:"✖ no response — check key/network";
  if(r)$("uplinkstate").textContent="ONLINE";};
-$("set-logout").onclick=()=>{localStorage.removeItem("jarvis-session");location.reload();};
+$("set-logout").onclick=()=>{alog("logout "+session);localStorage.removeItem("jarvis-session");location.reload();};
+$("set-export").onclick=()=>{
+ const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+  if(k.startsWith("jarvis-"))data[k]=localStorage.getItem(k);}
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:"application/json"}));
+ a.download="jarvis-backup.json";a.click();beep(880,.08);};
+$("set-import").onclick=()=>$("set-file").click();
+$("set-file").onchange=e=>{const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();
+ r.onload=()=>{try{const data=JSON.parse(r.result);
+  Object.keys(data).forEach(k=>{if(k.startsWith("jarvis-"))localStorage.setItem(k,data[k]);});
+  location.reload();}catch(err){alert("Bad backup file.");}};
+ r.readAsText(f);};
 $("btn-snd").onclick=()=>{identity.sounds=!identity.sounds;sj("jarvis-identity",identity);syncSnd();beep(880,.08);};
 function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"";}
 syncSnd();
 if(localStorage.getItem("jarvis-gemini-key"))$("uplinkstate").textContent="ONLINE";
+
+/* theme picker */
+const THEMES=["cyan","gold","crimson","green"];
+$("btn-theme").onclick=()=>{
+ const cur=document.body.dataset.theme||"cyan";
+ const nx=THEMES[(THEMES.indexOf(cur)+1)%THEMES.length];
+ document.body.dataset.theme=nx;localStorage.setItem("jarvis-theme",nx);
+ COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
+ beep(880,.06);};
 
 /* ============ TELEMETRY ============ */
 setInterval(()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
@@ -488,27 +536,49 @@ function radar(id){const cv=$(id),x=cv.getContext("2d"),W=cv.width,H=cv.height,
   x.globalAlpha=1;a+=.035;};}
 const graphs=[lineGraph("g-up"),barGraph("g-bus",14),radar("radar")];
 setInterval(()=>graphs.forEach(f=>f()),120);
-
 let pkt=0;
 setInterval(()=>{pkt+=1+Math.floor(Math.random()*6);$("pkt").textContent=pkt;},900);
 setInterval(()=>{const hex=Array.from({length:4},()=>Math.floor(Math.random()*65536).toString(16).padStart(4,"0").toUpperCase()).join(" ");
  const d=document.createElement("div");d.textContent="ENC ▸ "+hex;const c=$("cipher");
  c.appendChild(d);while(c.children.length>6)c.removeChild(c.firstChild);},800);
-
 function wcode(c){return c===0?"Clear":c<3?"Fair":c<50?"Cloudy":c<70?"Rain":"Storm";}
 function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`)
  .then(r=>r.json()).then(j=>{const c=j.current;
-  $("temp").textContent=Math.round(c.temperature_2m)+"°C";$("temp2").textContent=Math.round(c.temperature_2m)+"°C";
+  $("temp").textContent=Math.round(c.temperature_2m)+"°C";
   $("cond").textContent=wcode(c.weather_code);$("hum").textContent=c.relative_humidity_2m+"%";
   $("pres").textContent=Math.round(c.surface_pressure)+" hPa";}).catch(()=>{});}
 navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
 
-/* ============ 100+ COMMANDS & 20+ FUNCTIONS ============ */
+/* ============ SCHOOL: SCHEDULE + BELLS ============ */
+const schedGet=()=>lj("jarvis-schedule",[]);
+let lastBell="";
+setInterval(()=>{const S=schedGet();const d=new Date();
+ const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+ const cur=S.find(p=>now>=p.s&&now<p.e);
+ const nx=S.find(p=>p.s>now);
+ $("period").textContent=cur?cur.n.toUpperCase()+" till "+cur.e:(nx?"next "+nx.n+" "+nx.s:"—");
+ if(nx){const[h,mi]=nx.s.split(":").map(Number);
+  const diff=(h*60+mi)-(d.getHours()*60+d.getMinutes());
+  if(diff===5&&lastBell!==nx.s+d.toDateString()){lastBell=nx.s+d.toDateString();
+   beep(900,.1);jarvisSay(FM(`Heads up, {u}: ${nx.n} starts in 5 minutes.`));}}},30000);
+
+/* ============ 100+ COMMANDS, 20+ FUNCTIONS, 0.5 UPGRADES ============ */
 const U=()=>identity.user||session||"sir";
 const PK=o=>o[identity.pers]||o.butler;
 const FM=s=>s.replace(/{u}/g,U());
 const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-let quiz=null,triviaGame=null;
+let quiz=null,triviaGame=null,fcIdx=null;
+
+function lev(a,b){const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;
+ const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=0;j<=n;j++)d[0][j]=j;
+ for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]!==b[j-1]?1:0));
+ return d[m][n];}
+const FUZZ=["homework","timer","flashcard","schedule","password","weather","trivia","pomodoro","expense","convert","define","wiki","quote","joke","riddle","open","search","pictures","random","focus","remember","motivate","recipe","sleep","water","grade","gpa","theme"];
+function fuzzy(t){const words=t.split(" ");
+ for(const k of FUZZ)for(let i=0;i<words.length;i++){
+  const w=words[i].toLowerCase();if(w.length<4)continue;
+  if(w!==k&&lev(w,k)<=1)words[i]=k;}
+ return words.join(" ");}
 
 function setTimer(amount,unit,label){
  const ms=/^s/.test(unit||"")?amount*1000:/^h/.test(unit||"")?amount*3600000:amount*60000;
@@ -517,6 +587,8 @@ function setTimer(amount,unit,label){
   pirate:`Sandglass turned — ${amount} ${unit||"minutes"}, arr!`,
   hype:`TIMER ON!! ${amount} ${unit||"MINUTES"}!! GO GO GO!!`})));
  setTimeout(()=>{flare();for(let i=0;i<3;i++)setTimeout(()=>beep(1400,.18),i*260);
+  if(label==="Pomodoro"){const F=lj("jarvis-focus",{});const k=new Date().toDateString();
+   F[k]=(F[k]||0)+1;sj("jarvis-focus",F);}
   jarvisSay(FM(`⏰ Time's up, {u}! ${label||"Your timer"} is done.`));},ms);}
 function defineWord(w){fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+encodeURIComponent(w))
  .then(r=>r.json()).then(j=>{const m=j[0]&&j[0].meanings&&j[0].meanings[0];
@@ -526,77 +598,45 @@ function wiki(q){fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+enco
  .then(r=>r.json()).then(j=>jarvisSay(j.extract?(q+" — "+j.extract).slice(0,500):`Nothing found on "${q}", ${U()}.`))
  .catch(()=>jarvisSay("Research uplink silent, "+U()+"."));}
 function convertUnits(val,from,to){
- const conversions={m:{ft:3.28084,km:0.001,mi:0.000621371,yd:1.09361,in:39.3701},
-  kg:{lb:2.20462,g:1000,oz:35.274},c:{f:(v)=>v*9/5+32,k:(v)=>v+273.15},
-  f:{c:(v)=>(v-32)*5/9,k:(v)=>(v-32)*5/9+273.15}};
- const conv=conversions[from]?.[to];
- if(typeof conv==="function")return conv(val);
- if(typeof conv==="number")return val*conv;
- return null;}
-function calculateGPA(grades){const pts={"A+":4,"A":4,"A-":3.7,"B+":3.3,"B":3,"B-":2.7,"C+":2.3,"C":2,"C-":1.7,"D+":1.3,"D":1,"F":0};
- let total=0,count=0;grades.forEach(g=>{if(pts[g.toUpperCase()]!==undefined){total+=pts[g.toUpperCase()];count++;}});
- return count?+(total/count).toFixed(2):null;}
+ const c={m:{ft:3.28084,km:.001,mi:.000621371,yd:1.09361,in:39.3701},
+  kg:{lb:2.20462,g:1000,oz:35.274},c:{f:v=>v*9/5+32,k:v=>v+273.15},f:{c:v=>(v-32)*5/9,k:v=>(v-32)*5/9+273.15}};
+ const x=c[from]?.[to];return typeof x==="function"?x(val):typeof x==="number"?val*x:null;}
+function calculateGPA(g){const p={"A+":4,"A":4,"A-":3.7,"B+":3.3,"B":3,"B-":2.7,"C+":2.3,"C":2,"C-":1.7,"D+":1.3,"D":1,"F":0};
+ let t=0,c=0;g.forEach(x=>{if(p[x.toUpperCase()]!==undefined){t+=p[x.toUpperCase()];c++;}});
+ return c?+(t/c).toFixed(2):null;}
 function generatePassword(len=12){const c="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
  let p="";for(let i=0;i<len;i++)p+=c[ri(0,c.length-1)];return p;}
-function transformText(text,mode){
- switch(mode){
-  case"upper":return text.toUpperCase();
-  case"lower":return text.toLowerCase();
-  case"reverse":return text.split("").reverse().join("");
-  case"title":return text.replace(/\w\S*/g,t=>t.charAt(0).toUpperCase()+t.substr(1).toLowerCase());
-  case"snake":return text.toLowerCase().replace(/\s+/g,"_");
-  case"camel":return text.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g,(m,c)=>c.toUpperCase());
-  default:return text;}}
-function countWords(text){return text.trim().split(/\s+/).filter(w=>w.length>0).length;}
-function calculateReadingTime(text){return Math.ceil(countWords(text)/200);}
-function generateQuote(){const q=["The only way to do great work is to love what you do.","Innovation distinguishes between a leader and a follower.",
- "Stay hungry, stay foolish.","The future belongs to those who believe in the beauty of their dreams.","Success is not final, failure is not fatal.","Believe you can and you're halfway there."];
- return q[ri(0,q.length-1)];}
-function generateFact(){const f=["Honey never spoils.","Octopuses have three hearts.","A day on Venus is longer than a year on Venus.",
- "Bananas are berries, but strawberries aren't.","The shortest commercial flight in the world lasts 57 seconds.","Cows have best friends."];
- return f[ri(0,f.length-1)];}
-function calculateBMI(weight,height,unit){
- if(unit==="imperial"){weight=weight*0.453592;height=height*0.0254;}else{height/=100;}
- return+(weight/(height*height)).toFixed(1);}
-function calculateAge(birthdate){const birth=new Date(birthdate),now=new Date();
- let age=now.getFullYear()-birth.getFullYear();
- const m=now.getMonth()-birth.getMonth();
- if(m<0||(m===0&&now.getDate()<birth.getDate()))age--;
- return age;}
-function calculateTip(bill,percent){const tip=bill*(percent/100);return{tip:+tip.toFixed(2),total:+(bill+tip).toFixed(2)};}
-function generateRecipe(ingredient){const recipes={chicken:"Grilled chicken with herbs, pasta with chicken, chicken stir-fry",
- pasta:"Spaghetti carbonara, pasta primavera, mac and cheese",
- rice:"Fried rice, rice bowls, rice pudding"};
- return recipes[ingredient.toLowerCase()]||`Try searching for recipes with ${ingredient} online, ${U()}.`;}
-function trackExpenses(amount,category){let expenses=lj("jarvis-expenses",[]);
- expenses.push({amount:+amount,category,date:new Date().toISOString()});
- if(expenses.length>100)expenses=expenses.slice(-100);
- sj("jarvis-expenses",expenses);return expenses.reduce((s,e)=>s+e.amount,0);}
-function calculateLoan(principal,rate,years){const monthlyRate=rate/100/12;const n=years*12;
- const payment=principal*(monthlyRate*Math.pow(1+monthlyRate,n))/(Math.pow(1+monthlyRate,n)-1);
- return{monthly:+payment.toFixed(2),total:+(payment*n).toFixed(2),interest:+((payment*n)-principal).toFixed(2)};}
-function convertTimezone(time,to){try{
- return new Date(time).toLocaleString('en-US',{timeZone:to,hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){return null;}}
-function convertNumberBase(num,from,to){return parseInt(num,from).toString(to).toUpperCase();}
+function transformText(t,m){switch(m){case"upper":return t.toUpperCase();case"lower":return t.toLowerCase();
+ case"reverse":return t.split("").reverse().join("");
+ case"title":return t.replace(/\w\S*/g,x=>x.charAt(0).toUpperCase()+x.substr(1).toLowerCase());
+ case"snake":return t.toLowerCase().replace(/\s+/g,"_");
+ case"camel":return t.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g,(x,c)=>c.toUpperCase());default:return t;}}
+const countWords=t=>t.trim().split(/\s+/).filter(w=>w.length).length;
+const generateQuote=()=>["The only way to do great work is to love what you do.","Innovation distinguishes between a leader and a follower.","Stay hungry, stay foolish.","Believe you can and you're halfway there."][ri(0,3)];
+const generateFact=()=>["Honey never spoils.","Octopuses have three hearts.","A day on Venus is longer than its year.","Bananas are berries, but strawberries aren't.","Cows have best friends."][ri(0,4)];
+function calculateBMI(w,h,u){if(u==="imperial"){w*=.453592;h*=.0254;}else h/=100;return+(w/(h*h)).toFixed(1);}
+function calculateAge(b){const x=new Date(b),n=new Date();let a=n.getFullYear()-x.getFullYear();
+ const m=n.getMonth()-x.getMonth();if(m<0||(m===0&&n.getDate()<x.getDate()))a--;return a;}
+const calculateTip=(b,p)=>({tip:+(b*p/100).toFixed(2),total:+(b+b*p/100).toFixed(2)});
+function calculateLoan(p,r,y){const mr=r/100/12,n=y*12;
+ const pay=p*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+ return{monthly:+pay.toFixed(2),total:+(pay*n).toFixed(2),interest:+(pay*n-p).toFixed(2)};}
+function convertTimezone(t,to){try{return new Date(t).toLocaleString("en-US",{timeZone:to,hour:"2-digit",minute:"2-digit",hour12:false});}catch(e){return null;}}
+const convertNumberBase=(n,f,t)=>parseInt(n,f).toString(t).toUpperCase();
 function hslToRgb(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{
- const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
- const q=l<0.5?l*(1+s):l+s-l*s;const p=2*l-q;
- r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+ const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;
+ const f=t=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+ r=f(h+1/3);g=f(h);b=f(h-1/3);}
  return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];}
-function rgbToHex(r,g,b){return"#"+[r,g,b].map(x=>{const hex=x.toString(16);return hex.length===1?"0"+hex:hex;}).join("");}
 function generateColor(){const rgb=hslToRgb(ri(0,360)/360,ri(50,100)/100,ri(40,60)/100);
- return{hex:rgbToHex(rgb[0],rgb[1],rgb[2]),rgb:`rgb(${rgb.join(",")})`};}
-function trackWater(){let water=lj("jarvis-water",[]);
- const today=new Date().toDateString();
- water=water.filter(w=>new Date(w.date).toDateString()===today);
- water.push({date:new Date().toISOString()});
- sj("jarvis-water",water);return water.length;}
-function trackSleep(hours){let sleep=lj("jarvis-sleep",[]);
- sleep.push({hours:+hours,date:new Date().toISOString()});
- if(sleep.length>30)sleep=sleep.slice(-30);
- sj("jarvis-sleep",sleep);return sleep;}
+ return{hex:"#"+rgb.map(x=>x.toString(16).padStart(2,"0")).join(""),rgb:`rgb(${rgb.join(",")})`};}
+function trackWater(){let w=lj("jarvis-water",[]);const t=new Date().toDateString();
+ w=w.filter(x=>new Date(x.date).toDateString()===t);w.push({date:new Date().toISOString()});
+ sj("jarvis-water",w);return w.length;}
+function trackSleep(h){let s=lj("jarvis-sleep",[]);s.push({hours:+h,date:new Date().toISOString()});
+ if(s.length>30)s=s.slice(-30);sj("jarvis-sleep",s);return s;}
 
-/* ---- WEB LAUNCHER ---- */
+/* web launcher */
 const SITES={google:"https://www.google.com",youtube:"https://www.youtube.com",gmail:"https://mail.google.com",
 classroom:"https://classroom.google.com",drive:"https://drive.google.com",docs:"https://docs.google.com",
 maps:"https://maps.google.com",translate:"https://translate.google.com",wikipedia:"https://www.wikipedia.org",
@@ -611,23 +651,22 @@ function webLaunch(t){
   const term=(m[1]||m[2]||"").trim()||"dogs";
   return{url:"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(term),say:`Pulling up pictures of ${term}, {u}.`};}
  if(m=q.match(/^(?:search(?:\s+for)?|google)\s+(.+)/)){
-  for(const k of Object.keys(SITES)){if(k!=="google"&&m[1].includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};}
+  for(const k of Object.keys(SITES))if(k!=="google"&&m[1].includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};
   return{url:"https://www.google.com/search?q="+encodeURIComponent(m[1]),say:`Popping the search for "${m[1]}", {u}.`};}
  if(m=q.match(/^(?:open|launch|go to|goto|take me to)\s+(.+)/)){
   let s=m[1].replace(/^the /,"").trim();
-  for(const k of Object.keys(SITES)){if(k!=="google"&&s.includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};}
+  for(const k of Object.keys(SITES))if(k!=="google"&&s.includes(k))return{url:SITES[k],say:`Opening ${k}, {u}.`};
   if(SITES[s])return{url:SITES[s],say:`Opening ${s}, {u}.`};
   if(/\./.test(s)){let h=s.replace(/\s+/g,"");if(!/^https?:\/\//.test(h))h="https://"+h;return{url:h,say:`Opening ${s}, {u}.`};}
   return{url:"https://www.google.com/search?q="+encodeURIComponent(s),say:`Popping the search for "${s}", {u}.`};}
  return null;}
 
-/* ---- BRAIN ---- */
-const TIPS=["Study 25 minutes, break 5 — say 'pomodoro'.","Teach it to an imaginary friend.","Past papers beat re-reading notes.",
- "Phone in another room = +20% brain.","Water before exams.","Sleep is when memory saves itself."];
+const TIPS=["Study 25 minutes, break 5 — say 'pomodoro'.","Teach it to an imaginary friend.","Past papers beat re-reading notes.","Phone in another room = +20% brain.","Water before exams.","Sleep is when memory saves itself."];
 const JOKES={butler:["I would tell you a UDP joke, but you might not get it.","There are 10 types of people: those who understand binary, and those who don't."],
  snark:["I'd tell you a joke about your setup, but reality already did.","Why did the programmer quit? He didn't get arrays."],
  pirate:["Why do pirates never learn the alphabet? They always get stuck at C. Arr har.","What's a pirate's favorite letter? R... but me first love be the C!"],
  hype:["KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!","Why did the code go to therapy? Too many unresolved promises!!"]};
+const CMDS=["help","homework add","homework","homework done","notes","note","quiz","flashcard add","flashcard quiz","flashcard stats","gpa","grade","timer","remind me to","pomodoro","break time","study tip","focus stats","motivate me","convert","count words","reading time","bmi","age","tip","password","recipe","expense","expenses","loan","time in","binary","color","water","sleep","define","wiki","quote","fact","trivia","riddle","movie","book","music","game","flip","roll","random number","days until","open","search","pictures","joke","good morning","good night","schedule add","schedule","remember","what do you remember","forget","theme cyan","theme gold","theme crimson","theme green","stats","version","about"];
 
 function nextQ(){const a=ri(3,12),b=ri(3,12);quiz.n++;quiz.ans=a*b;
  jarvisSay(`Q${quiz.n}/5: what is ${a} × ${b}? (type "quit quiz" to stop)`);}
@@ -635,8 +674,7 @@ function quizAnswer(t){const q=t.toLowerCase();
  if(/quit|stop|exit/.test(q)){const s=quiz.score;quiz=null;return jarvisSay(FM(`Quiz ended — ${s} correct, {u}.`));}
  const n=parseInt(q.replace(/[^\d-]/g,""),10);
  if(!isNaN(n)){
-  if(n===quiz.ans){quiz.score++;beep(1000,.08);flare();
-   jarvisSay(FM(PK({butler:"Correct, {u}.",snark:"Right. Astonishing.",pirate:"Arr, correct!",hype:"YES!! CORRECT!!"})));}
+  if(n===quiz.ans){quiz.score++;beep(1000,.08);flare();jarvisSay(FM(PK({butler:"Correct, {u}.",snark:"Right. Astonishing.",pirate:"Arr, correct!",hype:"YES!! CORRECT!!"})));}
   else{beep(240,.12);jarvisSay(`Not quite — it was ${quiz.ans}.`);}
   if(quiz.n>=5){const s=quiz.score;quiz=null;jarvisSay(FM(`Final score ${s}/5, {u}. ${s>=4?"Outstanding.":"We shall train again."}`));}
   else nextQ();}
@@ -644,20 +682,49 @@ function quizAnswer(t){const q=t.toLowerCase();
 
 function localBrain(t){
  const q=(t||"").toLowerCase().trim();let m;
+ /* flashcard answer mode (Leitner) */
+ if(fcIdx!==null){
+  const cards=lj("jarvis-flashcards",[]);const c=cards[fcIdx];fcIdx=null;
+  if(c){const ok=q.includes(c.a.toLowerCase());
+   c.box=ok?Math.min(5,c.box+1):1;sj("jarvis-flashcards",cards);
+   return ok?FM(`Correct, {u} — card promoted to box ${c.box}.`):`Not quite — "${c.a}". Card back to box 1, {u}.`;}
+ }
  if(/^[\d\s+\-*/().%]+$/.test(q)&&/\d/.test(q)&&/[+\-*/]/.test(q)){try{
    const v=Function("return ("+q+")")();
    if(isFinite(v))return FM(PK({butler:`The answer is ${+v.toFixed(6)}, {u}.`,snark:`It's ${+v.toFixed(6)}.`,pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
- if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q)&&!/routine/.test(q))return FM(PK({butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ /* routines */
+ if(/good morning|morning routine/.test(q)){
+  const S=schedGet();const d=new Date();const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  const nx=S.find(p=>p.s>now);
+  jarvisSay(FM(`Good morning, {u}. Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}. ${nx?`First period: ${nx.n} at ${nx.s}.`:"No classes logged."} ${TIPS[ri(0,TIPS.length-1)]}`));
+  return null;}
+ if(/good night|night routine/.test(q)){
+  const hw=lj("jarvis-homework",[]).length;const f=lj("jarvis-focus",{})[new Date().toDateString()]||0;
+  jarvisSay(FM(`Good night, {u}. ${f} focus session(s) today, ${hw} homework task(s) left. Sleep well — memory saves itself during sleep.`));
+  return null;}
  m=q.match(/^(?:what time is it in|time in)\s+(.+)/);
  if(m){const tz=convertTimezone(new Date().toISOString(),m[1]);
-  if(tz)return FM(`Time in ${m[1]}: ${tz}, {u}.`);
-  return FM("Timezone not recognized, {u}.");}
+  if(tz)return FM(`Time in ${m[1]}: ${tz}, {u}.`);return FM("Timezone not recognized, {u}.");}
  if(/\btime\b|\bclock\b/.test(q))return FM(`It's ${$("clock").textContent} UTC, {u}.`);
  if(/date|today|what day/.test(q))return FM(PK({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",snark:"The calendar says "+$("datestr").textContent+". Thrilling.",pirate:"Arr, "+$("datestr").textContent+" by the stars.",hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
  if(/weather|temp|rain|sunny|outside|humid/.test(q))return FM(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
  if(/your name|who are you/.test(q))return FM(PK({butler:`I am ${identity.name}, your humble AI steward.`,snark:`${identity.name}. The only competent process running here.`,pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
  if(/my name|who am i/.test(q))return FM(`You are ${U()}, as registered in this terminal.`);
  if(/reactor|status|system|diagnostic/.test(q))return FM(PK({butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",snark:"Everything's fine. Unlike your browser history.",pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
+ /* memory */
+ m=q.match(/^remember (?:that )?(.+?) (?:is|=) (.+)/);
+ if(m){const M=lj("jarvis-memory",{});M[m[1].trim()]=m[2].trim();sj("jarvis-memory",M);
+  return FM(`Stored in memory: ${m[1]} is ${m[2]}, {u}.`);}
+ m=q.match(/my birthday is (.+)/);
+ if(m){const M=lj("jarvis-memory",{});M.birthday=m[1].trim();sj("jarvis-memory",M);
+  return FM(`Noted your birthday: ${m[1]}, {u}.`);}
+ if(/what do you remember|your memory/.test(q)){const M=lj("jarvis-memory",{});const ks=Object.keys(M);
+  if(!ks.length)return FM("My memory of you is empty, {u}. Say 'remember X is Y'.");
+  return FM(ks.map(k=>`${k}: ${M[k]}`).join(" · "));}
+ m=q.match(/^forget (.+)/);
+ if(m){const M=lj("jarvis-memory",{});delete M[m[1].trim()];sj("jarvis-memory",M);return FM(`Forgot "${m[1]}", {u}.`);}
+ /* school */
  if(/^quiz\b/.test(q)){quiz={score:0,n:0};nextQ();return FM("Quiz engaged, {u}. Five questions.");}
  m=q.match(/timer(?: for)?\s+(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)?/);
  if(m)return setTimer(+m[1],m[2]),null;
@@ -665,6 +732,10 @@ function localBrain(t){
  if(m)return setTimer(+m[2],m[3],`"${m[1]}"`),null;
  if(/pomodoro|focus mode|study session/.test(q))return setTimer(25,"m","Pomodoro"),null;
  if(/break time|take a break/.test(q))return setTimer(5,"m","Break"),null;
+ if(/focus stats|study stats/.test(q)){const F=lj("jarvis-focus",{});const out=[];
+  for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);const c=F[d.toDateString()]||0;
+   out.push(d.toLocaleDateString("en",{weekday:"short"})+" "+"█".repeat(c)+(c||"·"));}
+  return FM("Last 7 days: "+out.join(" "),{u}?"":undefined)||FM("Last 7 days: "+out.join(" "));}
  if(/\bhomework\b/.test(q)){
   let hw=lj("jarvis-homework",[]);
   if(/clear|delete all/.test(q)){sj("jarvis-homework",[]);return FM("Homework list cleared, {u}.");}
@@ -683,78 +754,85 @@ function localBrain(t){
   return FM(nt.slice(-5).map(n=>"• "+n).join("  "));}
  m=q.match(/(?:grade|score) (\d{1,3})\b/);
  if(m){const s=+m[1],L=s>=90?"A":s>=80?"B":s>=70?"C":s>=60?"D":"F";
-  return FM(PK({butler:`${s}% is a ${L}, ${u}.`,snark:`${s}% = ${L}.`,pirate:`A ${L}, matey!`,hype:`${L}!!`}));}
+  return FM(PK({butler:`${s}% is a ${L}, {u}.`,snark:`${s}% = ${L}.`,pirate:`A ${L}, matey!`,hype:`${L}!!`}));}
  if(/study tip|tips? for study|how to study/.test(q))return FM(TIPS[ri(0,TIPS.length-1)]);
  if(/motivat|inspire|pump me up/.test(q))return FM(PK({butler:"Discipline, {u}, is the bridge between goals and results.",snark:"You want motivation? Fine: someone else is studying right now.",pirate:"Storms make sailors better, arr — back to it!",hype:"YOU DIDN'T COME THIS FAR TO ONLY COME THIS FAR!! GO!!"}));
+ /* schedule */
+ m=q.match(/schedule add (\d{1,2}:\d{2}) (\d{1,2}:\d{2}) (.+)/);
+ if(m){const S=schedGet();S.push({s:m[1],e:m[2],n:m[3]});S.sort((a,b)=>a.s<b.s?-1:1);sj("jarvis-schedule",S);
+  return FM(`Period added: ${m[3]} ${m[1]}–${m[2]}, {u}.`);}
+ if(/schedule clear/.test(q)){sj("jarvis-schedule",[]);return FM("Schedule cleared, {u}.");}
+ if(/^schedule$|my schedule|classes/.test(q)){const S=schedGet();
+  if(!S.length)return FM("No schedule stored, {u}. Say 'schedule add 08:00 08:50 math'.");
+  return FM(S.map(p=>`${p.s} ${p.n}`).join(" · "));}
+ /* flashcards (Leitner boxes) */
  if(/flashcard/.test(q)){
   let cards=lj("jarvis-flashcards",[]);
   if(/clear/.test(q)){sj("jarvis-flashcards",[]);return FM("Flashcards cleared, {u}.");}
+  if(/stats/.test(q)){const b=[0,0,0,0,0];cards.forEach(c=>b[c.box-1]++);
+   return FM("Boxes 1–5: "+b.join(" / "),{u}?"":undefined)||FM("Boxes 1–5: "+b.join(" / "));}
   m=q.match(/add[:\s]+(.+?)\s*[=:]\s*(.+)/);
-  if(m){cards.push({q:m[1].trim(),a:m[2].trim()});sj("jarvis-flashcards",cards);return FM(`Flashcard added: "${m[1]}" = "${m[2]}", {u}.`);}
+  if(m){cards.push({q:m[1].trim(),a:m[2].trim(),box:1});sj("jarvis-flashcards",cards);
+   return FM(`Flashcard added: "${m[1]}" = "${m[2]}", {u}.`);}
   if(/quiz|test/.test(q)){
    if(!cards.length)return FM("No flashcards yet, {u}. Add some with 'flashcard add Q = A'.");
-   const card=cards[ri(0,cards.length-1)];
-   jarvisSay(`Flashcard: ${card.q}`);
-   setTimeout(()=>jarvisSay(`Answer: ${card.a}`),3000);
-   return null;}
+   const pool=[];cards.forEach((c,i)=>{const w=Math.max(1,6-c.box);for(let j=0;j<w;j++)pool.push(i);});
+   fcIdx=pool[ri(0,pool.length-1)];
+   jarvisSay(`Flashcard (box ${cards[fcIdx].box}): ${cards[fcIdx].q}`);
+   return FM("Type the answer, {u}.");}
   if(!cards.length)return FM("No flashcards yet, {u}.");
-  return FM(`${cards.length} flashcard(s) stored. Say 'flashcard quiz' to test yourself.`);}
+  return FM(`${cards.length} flashcard(s) stored. Say 'flashcard quiz'.`);}
  m=q.match(/gpa[:\s]+(.+)/);
- if(m){const grades=m[1].split(/[, ]+/).filter(g=>g.length>0);
-  const gpa=calculateGPA(grades);
+ if(m){const gpa=calculateGPA(m[1].split(/[, ]+/).filter(g=>g.length));
   if(gpa===null)return FM("Invalid grades, {u}. Use A, B+, C-, etc.");
   return FM(`GPA: ${gpa}, {u}.`);}
  m=q.match(/convert\s+(\d+(?:\.\d+)?)\s*(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)\s+to\s+(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)/);
- if(m){const result=convertUnits(+m[1],m[2],m[3]);
-  if(result===null)return FM("Cannot convert those units, {u}.");
-  return FM(`${m[1]} ${m[2]} = ${+result.toFixed(4)} ${m[3]}, {u}.`);}
+ if(m){const r=convertUnits(+m[1],m[2],m[3]);
+  if(r===null)return FM("Cannot convert those units, {u}.");
+  return FM(`${m[1]} ${m[2]} = ${+r.toFixed(4)} ${m[3]}, {u}.`);}
  m=q.match(/(?:count|how many)\s+words?\s+(?:in\s+)?(.+)/);
  if(m)return FM(`${countWords(m[1])} words, {u}.`);
  m=q.match(/(?:reading time|how long to read)\s+(.+)/);
- if(m)return FM(`${calculateReadingTime(m[1])} minute(s) to read, {u}.`);
+ if(m)return FM(`${Math.ceil(countWords(m[1])/200)} minute(s) to read, {u}.`);
  m=q.match(/bmi\s+(\d+(?:\.\d+)?)\s*(kg|lb)\s+(\d+(?:\.\d+)?)\s*(cm|in)/);
  if(m){const bmi=calculateBMI(+m[1],m[4]==="in"?+m[3]*2.54:+m[3],m[2]==="lb"?"imperial":"metric");
   const cat=bmi<18.5?"underweight":bmi<25?"normal":bmi<30?"overweight":"obese";
   return FM(`BMI: ${bmi} (${cat}), {u}.`);}
  m=q.match(/(?:how old|age)\s+(?:if born|born on)?\s*(\d{4})-(\d{1,2})-(\d{1,2})/);
- if(m){const age=calculateAge(`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`);
-  return FM(`${age} years old, {u}.`);}
+ if(m)return FM(`${calculateAge(`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`)} years old, {u}.`);
  m=q.match(/tip\s+(\d+(?:\.\d+)?)\s*(?:at|for)?\s*(\d+)%?/);
- if(m){const tp=calculateTip(+m[1],+m[2]);
-  return FM(`Tip: $${tp.tip}, total: $${tp.total}, {u}.`);}
- if(/password|passcode/.test(q)){
-  m=q.match(/password\s+(\d+)/);
-  const len=m?Math.min(32,+m[1]):12;
-  return FM(`Fresh passkey: ${generatePassword(len)} — store it wisely, {u}.`);}
+ if(m){const tp=calculateTip(+m[1],+m[2]);return FM(`Tip: $${tp.tip}, total: $${tp.total}, {u}.`);}
+ if(/password|passcode/.test(q)){m=q.match(/password\s+(\d+)/);
+  return FM(`Fresh passkey: ${generatePassword(m?Math.min(32,+m[1]):12)} — store it wisely, {u}.`);}
  m=q.match(/recipe[:\s]+(.+)/);
- if(m)return FM(generateRecipe(m[1]));
+ if(m)return FM(({chicken:"Grilled chicken with herbs, pasta with chicken, chicken stir-fry",pasta:"Spaghetti carbonara, pasta primavera, mac and cheese",rice:"Fried rice, rice bowls, rice pudding"})[m[1].toLowerCase()]||`Try searching recipes with ${m[1]}, {u}.`);
  m=q.match(/expense\s+(\d+(?:\.\d+)?)\s+(.+)/);
- if(m){const total=trackExpenses(m[1],m[2]);
-  return FM(`Logged $${m[1]} for ${m[2]}. Total expenses: $${+total.toFixed(2)}, {u}.`);}
- if(/expenses?/.test(q)&&!/log|add/.test(q)){const expenses=lj("jarvis-expenses",[]);
-  if(!expenses.length)return FM("No expenses logged, {u}.");
-  const total=expenses.reduce((s,e)=>s+e.amount,0);
-  return FM(`${expenses.length} expense(s), total: $${+total.toFixed(2)}, {u}.`);}
+ if(m){let ex=lj("jarvis-expenses",[]);ex.push({amount:+m[1],category:m[2]});
+  if(ex.length>100)ex=ex.slice(-100);sj("jarvis-expenses",ex);
+  return FM(`Logged $${m[1]} for ${m[2]}. Total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
+ if(/expenses?/.test(q)&&!/log|add/.test(q)){const ex=lj("jarvis-expenses",[]);
+  if(!ex.length)return FM("No expenses logged, {u}.");
+  return FM(`${ex.length} expense(s), total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
  m=q.match(/loan\s+(\d+(?:\.\d+)?)\s+at\s+(\d+(?:\.\d+)?)%\s+for\s+(\d+)\s*years?/);
- if(m){const loan=calculateLoan(+m[1],+m[2],+m[3]);
-  return FM(`Monthly: $${loan.monthly}, total: $${loan.total}, interest: $${loan.interest}, {u}.`);}
+ if(m){const l=calculateLoan(+m[1],+m[2],+m[3]);
+  return FM(`Monthly: $${l.monthly}, total: $${l.total}, interest: $${l.interest}, {u}.`);}
  m=q.match(/(?:convert|what is)\s+(\w+)\s+in\s+(binary|hex|decimal|octal)/);
- if(m){const bases={binary:2,hex:16,decimal:10,octal:8};
-  return FM(`${m[1]} in ${m[2]}: ${convertNumberBase(m[1],10,bases[m[2]])}, {u}.`);}
- if(/color|colour/.test(q)){const c=generateColor();
-  return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
- if(/water|hydrat|drink/.test(q)){const glasses=trackWater();
-  return FM(PK({butler:`Hydration logged. ${glasses} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${glasses} today.`,pirate:`Grog o' the clear kind, arr! ${glasses} today!`,hype:`WATER BREAK!! ${glasses} GLASSES TODAY!! HYDRATE TO DOMINATE!!`}));}
+ if(m)return FM(`${m[1]} in ${m[2]}: ${convertNumberBase(m[1],10,{binary:2,hex:16,decimal:10,octal:8}[m[2]])}, {u}.`);}
+ if(/color|colour/.test(q)){const c=generateColor();return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
+ if(/water|hydrat|drink/.test(q)){const g=trackWater();
+  return FM(PK({butler:`Hydration logged. ${g} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${g} today.`,pirate:`Grog o' the clear kind, arr! ${g} today!`,hype:`WATER BREAK!! ${g} GLASSES TODAY!!`}));}
  m=q.match(/sleep\s+(\d+(?:\.\d+)?)\s*hours?/);
- if(m){const logs=trackSleep(m[1]);
-  const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
+ if(m){const logs=trackSleep(m[1]);const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
   return FM(`Logged ${m[1]}h sleep. Average: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
  if(/sleep/.test(q)&&!/\d/.test(q)){const logs=lj("jarvis-sleep",[]);
   if(!logs.length)return FM("No sleep logged, {u}. Say 'sleep 8 hours'.");
-  const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
-  return FM(`Average sleep: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
+  return FM(`Average sleep: ${+(logs.reduce((s,l)=>s+l.hours,0)/logs.length).toFixed(1)}h over ${logs.length} night(s), {u}.`);}
  m=q.match(/(?:transform|convert|make)\s+(.+?)\s+to\s+(upper|lower|reverse|title|snake|camel)/);
  if(m)return FM(`"${transformText(m[1],m[2])}", {u}.`);
+ m=q.match(/^theme (cyan|gold|crimson|green)/);
+ if(m){document.body.dataset.theme=m[1];localStorage.setItem("jarvis-theme",m[1]);
+  COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
+  return FM(`Theme switched to ${m[1]}, {u}.`);}
  m=q.match(/^define (.+)/)||q.match(/what does (\w+) mean/);
  if(m){defineWord(m[1].trim());return "Looking it up…";}
  m=q.match(/^(?:wiki|wikipedia|research|look up|who is|who was|what is|what are|tell me about)\s+(.+)/);
@@ -762,28 +840,17 @@ function localBrain(t){
  if(/quote|inspir/.test(q))return FM(`"${generateQuote()}"`);
  if(/fact|did you know|interesting/.test(q))return FM(`Fun fact: ${generateFact()}`);
  if(/trivia/.test(q)){
-  const questions=[
-   {q:"What is the capital of France?",a:"paris"},
-   {q:"How many planets in our solar system?",a:"8"},
-   {q:"What year did WWII end?",a:"1945"},
-   {q:"What is the largest ocean?",a:"pacific"},
-   {q:"Who wrote Romeo and Juliet?",a:"shakespeare"}];
-  triviaGame={questions,current:0,score:0};
-  jarvisSay("Trivia! "+questions[0].q);
-  return FM("Answer the question, {u}.");}
+  triviaGame={questions:[{q:"What is the capital of France?",a:"paris"},{q:"How many planets in our solar system?",a:"8"},{q:"What year did WWII end?",a:"1945"},{q:"What is the largest ocean?",a:"pacific"},{q:"Who wrote Romeo and Juliet?",a:"shakespeare"}],current:0,score:0};
+  jarvisSay("Trivia! "+triviaGame.questions[0].q);return FM("Answer the question, {u}.");}
  if(triviaGame){
   if(/quit|stop|exit/.test(q)){const s=triviaGame.score;triviaGame=null;return FM(`Trivia ended — ${s} correct, {u}.`);}
-  const current=triviaGame.questions[triviaGame.current];
-  if(q.includes(current.a)){triviaGame.score++;beep(1000,.08);jarvisSay("Correct!");}
-  else{beep(240,.12);jarvisSay(`Wrong — it was ${current.a}.`);}
+  const cur=triviaGame.questions[triviaGame.current];
+  if(q.includes(cur.a)){triviaGame.score++;beep(1000,.08);jarvisSay("Correct!");}
+  else{beep(240,.12);jarvisSay(`Wrong — it was ${cur.a}.`);}
   triviaGame.current++;
-  if(triviaGame.current>=triviaGame.questions.length){
-   const s=triviaGame.score;triviaGame=null;
-   return FM(`Trivia complete: ${s}/5 correct, {u}.`);}
-  jarvisSay(triviaGame.questions[triviaGame.current].q);
-  return null;}
- if(/riddle/.test(q)){const riddles=["What has keys but no locks? A piano.","What gets wetter the more it dries? A towel.","What has a head and tail but no body? A coin."];
-  return FM(riddles[ri(0,riddles.length-1)]);}
+  if(triviaGame.current>=triviaGame.questions.length){const s=triviaGame.score;triviaGame=null;return FM(`Trivia complete: ${s}/5 correct, {u}.`);}
+  jarvisSay(triviaGame.questions[triviaGame.current].q);return null;}
+ if(/riddle/.test(q))return FM(["What has keys but no locks? A piano.","What gets wetter the more it dries? A towel.","What has a head and tail but no body? A coin."][ri(0,2)]);
  if(/movie|film/.test(q))return FM("Try: Inception, Interstellar, The Matrix, Parasite, {u}.");
  if(/book|read/.test(q))return FM("Try: 1984, Sapiens, Atomic Habits, The Alchemist, {u}.");
  if(/music|song/.test(q))return FM("Try: Daft Punk, Gorillaz, Tame Impala, {u}.");
@@ -794,30 +861,32 @@ function localBrain(t){
   const rolls=Array.from({length:n},()=>ri(1,sides));
   return FM(`${n}d${sides}: ${rolls.join(", ")} — total ${rolls.reduce((a,b)=>a+b,0)}, {u}.`);}
  m=q.match(/random number( between (\d+) and (\d+))?/);
- if(m){const a=+(m[2]||1),b=+(m[3]||100);return FM(`Your number is ${ri(a,b)}, {u}.`);}
+ if(m)return FM(`Your number is ${ri(+(m[2]||1),+(m[3]||100))}, {u}.`);
  m=q.match(/days until (.+)/);
- if(m){const names={christmas:"12-25",xmas:"12-25","new year":"01-01",halloween:"10-31",valentine:"02-14",valentines:"02-14"};
+ if(m){const names={christmas:"12-25",xmas:"12-25","new year":"01-01",halloween:"10-31",birthday:(lj("jarvis-memory",{}).birthday||"").slice(0,10)};
   const s=m[1].trim(),today=new Date();today.setHours(0,0,0,0);let d=null;
   if(/\d{4}-\d{2}-\d{2}/.test(s))d=new Date(s);
-  else if(names[s]){const[mm,dd]=names[s].split("-").map(Number);d=new Date(today.getFullYear(),mm-1,dd);if(d<today)d=new Date(today.getFullYear()+1,mm-1,dd);}
+  else if(names[s]&&names[s].length>=5){const[mm,dd]=names[s].slice(0,10).split("-").map(Number);
+   d=new Date(today.getFullYear(),mm-1,dd);if(d<today)d=new Date(today.getFullYear()+1,mm-1,dd);}
   if(!d)return FM("Give me a date like 'days until 2025-12-25' or 'days until christmas', {u}.");
   const days=Math.round((d-today)/864e5);
   return FM(days<=0?"That's today, {u}!":`${days} days until ${s}, {u}.`);}
  if(/joke|funny|laugh/.test(q))return FM(JOKES[identity.pers][ri(0,JOKES[identity.pers].length-1)]);
  if(/thank/.test(q))return FM(PK({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
  if(/love/.test(q))return FM(PK({butler:"How kind, {u}. I shall treasure it.",snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
- if(/help|what can you do/.test(q))return FM("School: timer, homework, notes, quiz, flashcard, gpa, grade, study tip. Convert: units, timezones, binary/hex. Calculate: bmi, age, tip, loan. Track: water, sleep, expenses. Fun: joke, fact, quote, trivia, riddle, roll, flip, password, color. Web: open/search/pictures. Plus math, weather — and with a Gemini key, anything, {u}.");
- if(/commands?|all commands/.test(q))return FM("100+ commands — type 'help' for categories, {u}.");
- if(/chat|comms/.test(q))return FM("The comms channel is one click away — 💬 CHAT, {u}.");
+ if(/help|what can you do/.test(q))return FM("School: timer, homework, notes, quiz, flashcard (Leitner), gpa, grade, schedule+bells, focus stats, study tip. Memory: remember/forget. Routines: good morning/good night. Convert: units, timezones, bases. Calculate: bmi, age, tip, loan. Track: water, sleep, expenses. Fun: joke, fact, quote, trivia, riddle, roll, flip, password, color, theme. Web: open/search/pictures. Plus math, weather, wake word 🎙 — and with a Gemini key, anything, {u}.");
+ if(/commands?|all commands/.test(q))return FM("150+ commands — type 'help' for categories, {u}.");
+ if(/chat|comms/.test(q))return FM("Comms docked on the right panel — or 💬 for the full page, {u}.");
  if(/target/.test(q))return FM("Press T or ◎ to engage targeting mode, {u}.");
  if(/gold|secret|konami|easter/.test(q))return FM("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
- if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.4.0 — Stark Industries Unified OS, {u}.");
- if(/about/.test(q))return FM("I am J.A.R.V.I.S., your AI assistant in a Stark Industries HUD. 100+ commands, 20+ functions, offline brain + Gemini uplink, {u}.");
- if(/stats?|statistics/.test(q)){const hw=lj("jarvis-homework",[]).length,nt=lj("jarvis-notes",[]).length,fl=lj("jarvis-flashcards",[]).length;
-  return FM(`${hw} homework task(s), ${nt} note(s), ${fl} flashcard(s), {u}.`);}
+ if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.5.0 — Stark Industries Unified OS, {u}.");
+ if(/about/.test(q))return FM("I am J.A.R.V.I.S. — 150+ commands, 25+ functions, memory, routines, Leitner flashcards, bell tracker, docked comms, themes, backups, offline brain + Gemini uplink, {u}.");
+ if(/stats?|statistics/.test(q)){return FM(`${lj("jarvis-homework",[]).length} homework, ${lj("jarvis-notes",[]).length} notes, ${lj("jarvis-flashcards",[]).length} flashcards, ${Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0)} focus sessions, {u}.`);}
  return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
 
 async function handleCommand(t){log("> "+t);beep(760,.04);
+ t=fuzzy(t);
+ cmdHist.unshift(t);cmdHist=cmdHist.slice(0,30);sj("jarvis-cmdhist",cmdHist);histIdx=-1;
  if(quiz)return quizAnswer(t);
  const wl=webLaunch(t);
  if(wl){const w=window.open(wl.url,"_blank");flare();
@@ -826,16 +895,50 @@ async function handleCommand(t){log("> "+t);beep(760,.04);
    `Your browser blocked the pop-up — allow pop-ups for this site, ${who}.`);
   return;}
  const r=await askGemini(t);const out=r||localBrain(t);if(out)jarvisSay(out);}
-$("send-btn").onclick=()=>{const t=$("console").value.trim();if(!t)return;$("console").value="";handleCommand(t);};
-$("console").addEventListener("keydown",e=>{if(e.key==="Enter")$("send-btn").click();});
+let cmdHist=lj("jarvis-cmdhist",[]),histIdx=-1;
+const consoleEl=$("console");
+$("send-btn").onclick=()=>{const t=consoleEl.value.trim();if(!t)return;consoleEl.value="";handleCommand(t);};
+consoleEl.addEventListener("keydown",e=>{
+ if(e.key==="Enter"){$("send-btn").click();return;}
+ if(e.key==="ArrowUp"){e.preventDefault();if(histIdx<cmdHist.length-1){histIdx++;consoleEl.value=cmdHist[histIdx];}return;}
+ if(e.key==="ArrowDown"){e.preventDefault();if(histIdx>0){histIdx--;consoleEl.value=cmdHist[histIdx];}else{histIdx=-1;consoleEl.value="";}return;}
+ if(e.key==="Tab"){e.preventDefault();const s=$("sugg").firstChild;if(s)consoleEl.value=s.textContent+" ";return;}});
+consoleEl.addEventListener("input",()=>{
+ const v=consoleEl.value.toLowerCase().trim();const s=$("sugg");s.innerHTML="";
+ if(!v)return;
+ CMDS.filter(c=>c.startsWith(v)&&c!==v).slice(0,5).forEach(c=>{
+  const b=document.createElement("button");b.className="btn";b.textContent=c;
+  b.onclick=()=>{consoleEl.value=c+" ";consoleEl.focus();};s.appendChild(b);});});
+
 let rec=null,micOn=false;
 $("mic-btn").onclick=()=>{
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR)return jarvisSay("Speech recognition unsupported in this browser.");
  if(!rec){rec=new SR();rec.lang="en-US";
-  rec.onresult=e=>{const t=e.results[0][0].transcript;$("console").value=t;handleCommand(t);};
+  rec.onresult=e=>{const t=e.results[0][0].transcript;consoleEl.value=t;handleCommand(t);};
   rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
  if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
+
+/* wake word */
+let wakeOn=false,wrec=null;
+$("btn-wake").onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR)return jarvisSay("Wake word unsupported in this browser, {u}.");
+ wakeOn=!wakeOn;$("btn-wake").classList.toggle("hot",wakeOn);
+ if(wakeOn){
+  wrec=new SR();wrec.continuous=true;wrec.interimResults=false;wrec.lang="en-US";
+  wrec.onresult=e=>{
+   const t=e.results[e.results.length-1][0].transcript.toLowerCase();
+   const wake=("hey "+identity.name).toLowerCase(),alt=identity.name.toLowerCase();
+   let cmd=null;
+   if(t.startsWith(wake))cmd=t.slice(wake.length);
+   else if(t.startsWith(alt))cmd=t.slice(alt.length);
+   else if(t.includes(wake+" "))cmd=t.split(wake+" ")[1];
+   if(cmd&&cmd.trim()){beep(1200,.08);flare();handleCommand(cmd.trim());}};
+  wrec.onend=()=>{if(wakeOn)try{wrec.start();}catch(e){}};
+  wrec.start();
+  jarvisSay(FM(`Wake word active — say "hey ${identity.name}" then a command, {u}.`));}
+ else{try{wrec.stop();}catch(e){}}};
 
 /* ============ GEMINI ============ */
 function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
@@ -855,6 +958,48 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
+
+/* ============ DOCKED COMMS + PRESENCE ============ */
+(function(){
+ if(typeof mqtt==="undefined")return;
+ const list=$("c-list"),nameI=$("c-name"),chanI=$("c-chan"),textI=$("c-text");
+ nameI.value=localStorage.getItem("jarvis-callsign")||session||"Guest";
+ chanI.value=localStorage.getItem("jarvis-channel")||"lounge";
+ nameI.oninput=()=>localStorage.setItem("jarvis-callsign",nameI.value);
+ chanI.oninput=()=>{localStorage.setItem("jarvis-channel",chanI.value);switchC();};
+ const BR=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
+ const seen=new Set(),pres={};let ci=null,bi=0,con=false;
+ const myId=Math.random().toString(36).slice(2);
+ const PT="jarvis-site-presence";
+ function topicFor(ch){ch=(ch||"lounge").trim().toLowerCase().replace(/[^a-z0-9\-_]/g,"-")||"lounge";return "jarvis-site-comms/"+ch;}
+ let topic=topicFor(chanI.value);
+ function add(name,text,time,sys){const d=document.createElement("div");d.style.marginBottom="4px";
+  d.innerHTML=`<b style="color:var(--hot)"></b> <i style="opacity:.5"></i><div></div>`;
+  d.children[0].textContent=name;d.children[1].textContent=time||"";d.children[2].textContent=text;
+  if(sys)d.style.opacity=.6;
+  list.appendChild(d);list.scrollTop=list.scrollHeight;}
+ function connect(){ci=mqtt.connect(BR[bi],{clientId:"jarvis-"+myId,connectTimeout:5000,reconnectPeriod:4000});
+  ci.on("connect",()=>{con=true;ci.subscribe(topic);ci.subscribe(PT);add("SYSTEM","Channel open: #"+chanI.value,"",true);});
+  ci.on("error",()=>{if(!con){bi=(bi+1)%BR.length;try{ci.end(true);}catch(e){}connect();}});
+  ci.on("message",(t,p)=>{let m;try{m=JSON.parse(p.toString());}catch(e){return;}
+   if(t===PT){if(m.id&&m.id!==myId)pres[m.id]={n:m.n,ts:m.ts};return;}
+   if(t!==topic||!m.id||seen.has(m.id))return;seen.add(m.id);
+   add(m.name||"Guest",m.text||"",m.time||"");beep(520,.05);flare();});}
+ connect();
+ setInterval(()=>{if(!con)return;
+  ci.publish(PT,JSON.stringify({id:myId,n:nameI.value||"Guest",ts:Date.now()}));
+  const now=Date.now();let c=0;for(const k in pres)if(now-pres[k].ts<15000)c++;
+  $("c-on").textContent=c+1;},5000);
+ function switchC(){const nt=topicFor(chanI.value);if(nt===topic)return;
+  if(con){ci.unsubscribe(topic);ci.subscribe(nt);}
+  topic=nt;list.innerHTML="";seen.clear();add("SYSTEM","Switched to #"+chanI.value,"",true);}
+ function send(){const t=textI.value.trim();if(!t)return;
+  if(!con)return alert("Uplink not ready.");
+  ci.publish(topic,JSON.stringify({id:myId+Date.now().toString(36),name:nameI.value||"Guest",text:t,time:new Date().toTimeString().slice(0,8)}));
+  textI.value="";beep(840,.05);}
+ $("c-send").onclick=send;
+ textI.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
+})();
 
 /* ============ TARGETING ============ */
 let tgtOn=false,locked=false;
@@ -880,7 +1025,11 @@ window.addEventListener("keydown",e=>{
   COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
   beep(1200,.15);jarvisSay("Mark XLII gold-titanium protocol engaged. Flattering, sir.");}});
 
-log("STARK PROTOCOL — awaiting boot…");
+/* PWA */
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
+ navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+log("STARK PROTOCOL v0.5 — awaiting boot…");
 </script>
 </body>
 </html>
