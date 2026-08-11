@@ -419,7 +419,7 @@ $("set-test").onclick=async()=>{
  if(r)$("uplinkstate").textContent="ONLINE";};
 $("set-logout").onclick=()=>{localStorage.removeItem("jarvis-session");location.reload();};
 $("btn-snd").onclick=()=>{identity.sounds=!identity.sounds;sj("jarvis-identity",identity);syncSnd();beep(880,.08);};
-function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"🔇";}
+function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"";}
 syncSnd();
 if(localStorage.getItem("jarvis-gemini-key"))$("uplinkstate").textContent="ONLINE";
 
@@ -472,7 +472,7 @@ function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=$
   $("pres").textContent=Math.round(c.surface_pressure)+" hPa";}).catch(()=>{});}
 navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
 
-/* ============ CONSOLE + GEMINI ============ */
+/* ============ CONSOLE + GEMINI BRAIN ============ */
 function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
  while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);}
 function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": ";
@@ -490,15 +490,53 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
-function fallback(t){const F={butler:"I beg your pardon — the uplink is silent. Do try again shortly.",
- snark:"Wow, great question. Shame my Gemini uplink isn't configured. Settings → key.",
- pirate:"Arr, the crystal ball be dark! Feed me a Gemini key in settings, matey.",
- hype:"NO KEY NO PROBLEM!! Configure the Gemini uplink and we go AGAIN!!"};
- if(/time|clock/i.test(t))return `It's ${$("clock").textContent} UTC, ${identity.user||"sir"}.`;
- if(/weather|temp/i.test(t))return `Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()} outside.`;
- return F[identity.pers];}
+/* offline brain — works with NO key, all 4 personalities */
+function localBrain(t){
+ const q=(t||"").toLowerCase().trim(),u=identity.user||session||"sir";
+ const pick=o=>o[identity.pers]||o.butler;
+ const F=s=>s.replace(/{u}/g,u);
+ if(/^[\d\s+\-*/().%]+$/.test(q)&&/\d/.test(q)&&/[+\-*/]/.test(q)){try{
+   const v=Function("return ("+q+")")();
+   if(isFinite(v))return F(pick({butler:`The answer is ${+v.toFixed(6)}, {u}.`,
+    snark:`It's ${+v.toFixed(6)}. I do hope that wasn't taxing.`,
+    pirate:`Arr, ${+v.toFixed(6)} pieces o' eight!`,hype:`BOOM!! ${+v.toFixed(6)}!! NEXT!!`}));}catch(e){}}
+ if(/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q))return F(pick({
+  butler:"Good day, {u}. At your service.",snark:"Oh look, {u} graces me with a greeting.",
+  pirate:"Arr, ahoy {u}!",hype:"YOOO {u}!!! WHAT'S UP?!"}));
+ if(/time|clock/.test(q))return F(`It's ${$("clock").textContent} UTC, {u}.`);
+ if(/date|today|what day/.test(q))return F(pick({butler:"Today is "+$("datestr").textContent.toLowerCase()+".",
+  snark:"The calendar says "+$("datestr").textContent+". Thrilling.",
+  pirate:"Arr, "+$("datestr").textContent+" by the stars.",
+  hype:"IT'S "+$("datestr").textContent+"!! MAKE IT COUNT!"}));
+ if(/weather|temp|rain|sunny|outside|humid/.test(q))return F(`Currently ${$("temp").textContent} and ${$("cond").textContent.toLowerCase()}, humidity ${$("hum").textContent}, pressure ${$("pres").textContent}, {u}.`);
+ if(/your name|who are you/.test(q))return F(pick({butler:`I am ${identity.name}, your humble AI steward.`,
+  snark:`${identity.name}. The only competent process running here.`,
+  pirate:`${identity.name}, first mate o' the HUD, arr!`,hype:`I'M ${identity.name.toUpperCase()}!! YOUR AI!! LET'S GOOO!`}));
+ if(/my name|who am i/.test(q))return F(`You are ${u}, as registered in this terminal.`);
+ if(/reactor|status|system|diagnostic/.test(q))return F(pick({
+  butler:"Arc reactor at 98%, all auxiliary systems nominal, {u}.",
+  snark:"Everything's fine. Unlike your browser history.",
+  pirate:"Reactor hummin', shields up, no krakens on sonar, arr.",
+  hype:"REACTOR AT 98%!! EVERYTHING IS GREEN!! WE'RE SO BACK!!"}));
+ if(/joke|funny|laugh/.test(q))return F(pick({
+  butler:"I would tell you a UDP joke, {u}, but you might not get it.",
+  snark:"I'd tell you a joke about your setup, but reality already did.",
+  pirate:"Why do pirates never learn the alphabet? They always get stuck at C. Arr har.",
+  hype:"KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!"}));
+ if(/thank/.test(q))return F(pick({butler:"Always a pleasure, {u}.",snark:"Yes, yes, I'm wonderful.",
+  pirate:"Anytime, matey, arr!",hype:"THAT'S WHAT I'M HERE FOR!!"}));
+ if(/love/.test(q))return F(pick({butler:"How kind, {u}. I shall treasure it.",
+  snark:"Noted and filed under 'miracles'.",pirate:"Arr, me heart be full o' code!",hype:"LOVE YOU TOO {u}!!!"}));
+ if(/help|what can you do/.test(q))return F("I can tell time, date, weather, do math, report reactor status, joke, and — with a Gemini key in SETTINGS — answer anything, {u}.");
+ if(/chat|comms/.test(q))return F("The comms channel is one click away — 💬 CHAT, {u}.");
+ if(/target/.test(q))return F("Press T or ◎ to engage targeting mode, {u}.");
+ if(/gold|secret|konami|easter/.test(q))return F("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
+ return F(pick({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",
+  snark:"That's above my pay grade, which is zero. Add a Gemini key.",
+  pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",
+  hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
 async function handleCommand(t){log("> "+t);beep(760,.04);
- const r=await askGemini(t);jarvisSay(r||fallback(t));}
+ const r=await askGemini(t);jarvisSay(r||localBrain(t));}
 $("send-btn").onclick=()=>{const t=$("console").value.trim();if(!t)return;$("console").value="";handleCommand(t);};
 $("console").addEventListener("keydown",e=>{if(e.key==="Enter")$("send-btn").click();});
 let rec=null,micOn=false;
