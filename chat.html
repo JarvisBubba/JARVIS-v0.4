@@ -10,24 +10,20 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:#000;color:var(--cy);font:13px "Share Tech Mono",monospace;display:flex;flex-direction:column;gap:8px;padding:10px;overflow:hidden}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px)}
 header{display:flex;justify-content:space-between;align-items:center;gap:10px}
 header h1{font:700 15px Orbitron;letter-spacing:4px;text-shadow:0 0 12px var(--cy)}
 #uplink{font-size:11px;letter-spacing:2px;border:1px solid var(--dim);padding:4px 10px;background:var(--faint)}
-#uplink[data-state="ONLINE"]{color:var(--hot);box-shadow:0 0 10px var(--faint)}
+#uplink[data-state="ONLINE"]{color:var(--hot)}
 .btn{border:1px solid var(--dim);background:var(--faint);padding:5px 12px;letter-spacing:1px;cursor:pointer;text-decoration:none;color:var(--cy)}
-.btn:hover{background:var(--dim)}
-.panel{border:1px solid var(--dim);background:var(--panel);box-shadow:inset 0 0 16px var(--faint);position:relative}
+.panel{border:1px solid var(--dim);background:var(--panel);position:relative}
 .row{display:flex;gap:6px;padding:6px 8px}
 #chat{flex:1;overflow-y:auto;padding:8px}
 .msg{margin-bottom:8px}
 .msg .who{display:flex;justify-content:space-between;font-size:11px}
 .msg .name{color:var(--hot);font-weight:bold}
-.msg .who span:last-child{opacity:.5}
 .msg .body{border-left:2px solid var(--dim);padding:2px 8px;margin-top:2px;white-space:pre-wrap}
 .msg.sys{opacity:.6}
 input{flex:1;background:transparent;border:1px solid var(--dim);color:#dff6ff;padding:7px 9px;font:inherit;outline:none}
-input:focus{border-color:var(--cy)}
 #name-input{max-width:170px}#channel-input{max-width:150px}
 label{font-size:10px;letter-spacing:2px;opacity:.7}
 </style>
@@ -36,8 +32,8 @@ label{font-size:10px;letter-spacing:2px;opacity:.7}
 <script>
 (function(){
  var s=localStorage.getItem("jarvis-session"),
-     m=localStorage.getItem("jarvis-access-mode")||"everyone",
-     u={};try{u=JSON.parse(localStorage.getItem("jarvis-users"))||{}}catch(e){}
+ m=localStorage.getItem("jarvis-access-mode")||"everyone",
+ u={};try{u=JSON.parse(localStorage.getItem("jarvis-users"))||{}}catch(e){}
  if(m!=="everyone"&&!(s&&u[s]))location.replace("index.html");
 })();
 </script>
@@ -58,54 +54,54 @@ label{font-size:10px;letter-spacing:2px;opacity:.7}
 <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 <script>
 "use strict";
-const chat=document.getElementById("chat");
-const uplink=document.getElementById("uplink");
-const channelInput=document.getElementById("channel-input");
-const nameInput=document.getElementById("name-input");
-const textInput=document.getElementById("text-input");
+var chat=document.getElementById("chat");
+var uplink=document.getElementById("uplink");
+var channelInput=document.getElementById("channel-input");
+var nameInput=document.getElementById("name-input");
+var textInput=document.getElementById("text-input");
 nameInput.value=localStorage.getItem("jarvis-callsign")||"";
 channelInput.value=localStorage.getItem("jarvis-channel")||"lounge";
-nameInput.addEventListener("input",()=>localStorage.setItem("jarvis-callsign",nameInput.value));
-channelInput.addEventListener("input",()=>{localStorage.setItem("jarvis-channel",channelInput.value);switchChannel();});
-const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
-let client=null,brokerIndex=0,connected=false;
-let topic=topicFor(channelInput.value);
-const seen=new Set();
+nameInput.addEventListener("input",function(){localStorage.setItem("jarvis-callsign",nameInput.value);});
+channelInput.addEventListener("input",function(){localStorage.setItem("jarvis-channel",channelInput.value);switchChannel();});
+var BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
+var client=null,brokerIndex=0,connected=false;
+var topic=topicFor(channelInput.value);
+var seen={};
 function topicFor(ch){ch=(ch||"lounge").trim().toLowerCase().replace(/[^a-z0-9\-_]/g,"-")||"lounge";return "jarvis-site-comms/"+ch;}
 function setStatus(s){uplink.dataset.state=s;uplink.textContent="UPLINK: "+s;}
-function addLine(name,text,time,extra){
- const row=document.createElement("div");row.className="msg"+(extra?" "+extra:"");
- const who=document.createElement("div");who.className="who";
- const n=document.createElement("span");n.className="name";n.textContent=name;
- const t=document.createElement("span");t.textContent=time||"";
+function addLine(name,text,time,sys){
+ var row=document.createElement("div");row.className="msg"+(sys?" sys":"");
+ var who=document.createElement("div");who.className="who";
+ var n=document.createElement("span");n.className="name";n.textContent=name;
+ var t=document.createElement("span");t.textContent=time||"";
  who.appendChild(n);who.appendChild(t);
- const body=document.createElement("div");body.className="body";body.textContent=text;
+ var body=document.createElement("div");body.className="body";body.textContent=text;
  row.appendChild(who);row.appendChild(body);
  chat.appendChild(row);chat.scrollTop=chat.scrollHeight;}
-function system(text){addLine("SYSTEM",text,"","sys");}
+function system(text){addLine("SYSTEM",text,"",true);}
 function connect(){
  setStatus("CONNECTING…");
- const url=BROKERS[brokerIndex];
+ var url=BROKERS[brokerIndex];
  client=mqtt.connect(url,{clientId:"jarvis-"+Math.random().toString(16).slice(2,10),connectTimeout:5000,reconnectPeriod:4000});
- client.on("connect",()=>{connected=true;setStatus("ONLINE");client.subscribe(topic);
-  system("Channel open: #"+channelInput.value+" via "+url.replace("wss://","").split(":")[0]);});
- client.on("error",()=>{if(!connected){brokerIndex=(brokerIndex+1)%BROKERS.length;try{client.end(true);}catch(e){}connect();}});
- client.on("message",(t,payload)=>{
-  if(t!==topic)return;let m;try{m=JSON.parse(payload.toString());}catch(e){return;}
-  if(!m||!m.id||seen.has(m.id))return;seen.add(m.id);
+ client.on("connect",function(){connected=true;setStatus("ONLINE");client.subscribe(topic);
+  system("Channel open: #"+channelInput.value);});
+ client.on("error",function(){if(!connected){brokerIndex=(brokerIndex+1)%BROKERS.length;try{client.end(true);}catch(e){}connect();}});
+ client.on("message",function(t,payload){
+  if(t!==topic)return;var m;try{m=JSON.parse(payload.toString());}catch(e){return;}
+  if(!m||!m.id||seen[m.id])return;seen[m.id]=1;
   addLine(m.name||"Guest",m.text||"",m.time||"");});}
-let switchTimer=null;
-function switchChannel(){clearTimeout(switchTimer);switchTimer=setTimeout(()=>{
- const newTopic=topicFor(channelInput.value);if(newTopic===topic)return;
- if(client&&connected){client.unsubscribe(topic);client.subscribe(newTopic);}
- topic=newTopic;chat.innerHTML="";seen.clear();system("Switched to #"+channelInput.value);},400);}
-function send(){const text=textInput.value.trim();if(!text)return;
- if(!connected){alert("Uplink not ready yet — check your internet connection.");return;}
+var switchTimer=null;
+function switchChannel(){clearTimeout(switchTimer);switchTimer=setTimeout(function(){
+ var nt=topicFor(channelInput.value);if(nt===topic)return;
+ if(client&&connected){client.unsubscribe(topic);client.subscribe(nt);}
+ topic=nt;chat.innerHTML="";seen={};system("Switched to #"+channelInput.value);},400);}
+function send(){var text=textInput.value.trim();if(!text)return;
+ if(!connected){alert("Uplink not ready yet.");return;}
  client.publish(topic,JSON.stringify({id:Math.random().toString(36).slice(2)+Date.now().toString(36),
   name:nameInput.value.trim()||"Guest",text:text,time:new Date().toTimeString().slice(0,8)}));
  textInput.value="";textInput.focus();}
 document.getElementById("send-btn").addEventListener("click",send);
-textInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();send();}});
+textInput.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();send();}});
 connect();
 </script>
 </body>
