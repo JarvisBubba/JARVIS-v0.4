@@ -126,7 +126,7 @@ canvas{width:100%;display:block}
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
 <script>
-/* FREEZE-SHIELD + CRASH REPORTER */
+/* FREEZE-SHIELD + CRASH REPORTER — independent of the main script */
 (function(){
   var done=false;
   function kill(){if(done)return;done=true;
@@ -310,8 +310,10 @@ document.body.dataset.theme=localStorage.getItem("jarvis-theme")||"cyan";
 let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0ff";
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
 let skip=false;
+
 function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;
  $("toasts").appendChild(d);setTimeout(()=>d.remove(),5000);}
+
 let AC=null;
 function beep(f=880,d=.06,type="square",g=.05){
  if(!identity.sounds)return;
@@ -336,6 +338,8 @@ function followListen(){const SR=window.SpeechRecognition||window.webkitSpeechRe
   frec.start();}catch(e){}}
 let onFlare=null;
 function flare(){const r=$("reactor");r.classList.add("flare");setTimeout(()=>r.classList.remove("flare"),650);if(onFlare)onFlare();}
+
+/* reactor particles (guarded) */
 const sp=$("sparks");let sx=null,PART=[];
 if(sp){sx=sp.getContext("2d");
  function sizeSparks(){sp.width=sp.clientWidth||600;sp.height=sp.clientHeight||400;}
@@ -348,9 +352,12 @@ onFlare=()=>burst(24);
  PART.forEach(p=>{p.x+=Math.cos(p.a)*p.v;p.y+=Math.sin(p.a)*p.v;p.l-=.02;
   sx.globalAlpha=Math.max(0,p.l);sx.fillStyle=COL;sx.fillRect(p.x,p.y,2,2);});
  sx.globalAlpha=1;}requestAnimationFrame(loop);})();
+
 if(navigator.getBattery)navigator.getBattery().then(b=>{
  const upd=()=>$("reactor").classList.toggle("low",b.level<.25&&!b.charging);
  upd();b.addEventListener("levelchange",upd);b.addEventListener("chargingchange",upd);}).catch(()=>{});
+
+/* ============ BOOT ============ */
 const bootLines=["STARK INDUSTRIES UNIFIED OS v0.6.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
 "NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
@@ -374,6 +381,8 @@ setTimeout(finishBoot,6000);
   await wait(L?140:60);}
  await wait(400);
 }catch(e){console.error(e);}finally{finishBoot();}})();
+
+/* ============ TERMINAL LOGIN (BYRON = ONLY ADMIN) ============ */
 let users=lj("jarvis-users",{});
 const isAdmin=n=>(n||"").toLowerCase()==="byron";
 if(users.admin&&users.admin.pass==="stark")delete users.admin;
@@ -495,6 +504,8 @@ function unlock(){
  const h=new Date().getHours(),part=h<12?"morning":h<18?"afternoon":"evening";
  jarvisSay(`All systems online. Good ${part}, ${identity.user||session||"sir"}.`);
  beep(520,.09);setTimeout(()=>beep(780,.12),120);}
+
+/* ============ ADMIN ============ */
 $("btn-admin").onclick=openAdmin;
 $("adm-close").onclick=()=>$("admin").classList.add("hidden");
 $("adm-mode").onchange=e=>{localStorage.setItem("jarvis-access-mode",e.target.value);beep(600,.05);};
@@ -523,6 +534,8 @@ function renderAdmin(){
   $("adm-users").appendChild(d);});
  const L=lj("jarvis-log",[]);
  $("adm-log").innerHTML=L.slice(-15).reverse().map(x=>`<div class="kv"><span>${x.t}</span><b>${x.e}</b></div>`).join("")||'<div class="kv"><span>—</span><span>empty</span></div>';}
+
+/* ============ SETTINGS ============ */
 $("btn-set").onclick=()=>{
  $("set-name").value=identity.name;$("set-user").value=identity.user;
  $("set-pers").value=identity.pers;$("set-voice").checked=identity.voice;
@@ -575,6 +588,8 @@ $("btn-theme").onclick=()=>{
  toast("🎨 Theme: "+nx);beep(880,.06);};
 function setZen(on){document.body.classList.toggle("zen",on);toast(on?"🧘 Zen mode — distractions hidden":"Zen off");beep(on?500:700,.06);}
 $("btn-zen").onclick=()=>setZen(!document.body.classList.contains("zen"));
+
+/* ============ XP / RANKS / STREAKS / PROFILE ============ */
 const RANKS=["Cadet","Ensign","Engineer","Specialist","Commander","Director","Stark Protégé"];
 const lvl=x=>Math.floor(Math.sqrt(x/100));
 const rankOf=x=>RANKS[Math.min(lvl(x),RANKS.length-1)];
@@ -598,6 +613,8 @@ function renderProfile(){
  $("pr-f").textContent=Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0);
  const t=new Date().toDateString();
  $("pr-w").textContent=lj("jarvis-water",[]).filter(w=>new Date(w.date).toDateString()===t).length;}
+
+/* ============ TELEMETRY ============ */
 setInterval(()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
  const t=p(d.getUTCHours())+":"+p(d.getUTCMinutes())+":"+p(d.getUTCSeconds());
  $("clock").textContent=t;$("utcmini").textContent=t;
@@ -649,6 +666,8 @@ function loadW(lat,lon){fetch(`https://api.open-meteo.com/v1/forecast?latitude=$
    $("rain").textContent=mx+"%"+(mx>=50?" ☂":"");}
  }).catch(()=>{});}
 navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>loadW(p.coords.latitude,p.coords.longitude),()=>loadW(40.71,-74.02)):loadW(40.71,-74.02);
+
+/* ============ SCHEDULE + BELLS ============ */
 const schedGet=()=>lj("jarvis-schedule",[]);
 let lastBell="";
 setInterval(()=>{const S=schedGet();const d=new Date();
@@ -661,6 +680,8 @@ setInterval(()=>{const S=schedGet();const d=new Date();
   if(diff===5&&lastBell!==nx.s+d.toDateString()){lastBell=nx.s+d.toDateString();
    beep(900,.1);toast("🔔 "+nx.n+" in 5 minutes");
    jarvisSay(FM(`Heads up, {u}: ${nx.n} starts in 5 minutes.`));}}},30000);
+
+/* ============ BRAIN HELPERS ============ */
 const U=()=>identity.user||session||"sir";
 const PK=o=>o[identity.pers]||o.butler;
 const FM=s=>s.replace(/{u}/g,U());
@@ -732,6 +753,7 @@ function trackWater(){let w=lj("jarvis-water",[]);const t=new Date().toDateStrin
  sj("jarvis-water",w);return w.length;}
 function trackSleep(h){let s=lj("jarvis-sleep",[]);s.push({hours:+h,date:new Date().toISOString()});
  if(s.length>30)s=s.slice(-30);sj("jarvis-sleep",s);return s;}
+
 const SITES={google:"https://www.google.com",youtube:"https://www.youtube.com",gmail:"https://mail.google.com",
 classroom:"https://classroom.google.com",drive:"https://drive.google.com",docs:"https://docs.google.com",
 maps:"https://maps.google.com",translate:"https://translate.google.com",wikipedia:"https://www.wikipedia.org",
@@ -755,6 +777,7 @@ function webLaunch(t){
   if(/\./.test(s)){let h=s.replace(/\s+/g,"");if(!/^https?:\/\//.test(h))h="https://"+h;return{url:h,say:`Opening ${s}, {u}.`};}
   return{url:"https://www.google.com/search?q="+encodeURIComponent(s),say:`Popping the search for "${s}", {u}.`};}
  return null;}
+
 function briefing(){
  const S=schedGet();const d=new Date();
  const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
@@ -775,12 +798,14 @@ $("btn-brief").onclick=briefing;
 $("brief-close").onclick=()=>$("brief").classList.add("hidden");
 $("btn-conv").onclick=()=>{convOn=!convOn;$("btn-conv").classList.toggle("hot",convOn);
  jarvisSay(FM(convOn?"Conversation mode on — I'll listen for 12 seconds after each reply, {u}.":"Conversation mode off, {u}."));};
+
 const TIPS=["Study 25 minutes, break 5 — say 'pomodoro'.","Teach it to an imaginary friend.","Past papers beat re-reading notes.","Phone in another room = +20% brain.","Water before exams.","Sleep is when memory saves itself."];
 const JOKES={butler:["I would tell you a UDP joke, but you might not get it.","There are 10 types of people: those who understand binary, and those who don't."],
  snark:["I'd tell you a joke about your setup, but reality already did.","Why did the programmer quit? He didn't get arrays."],
  pirate:["Why do pirates never learn the alphabet? They always get stuck at C. Arr har.","What's a pirate's favorite letter? R... but me first love be the C!"],
  hype:["KNOCK KNOCK!! WHO'S THERE?? SUCCESS!! SUCCESS WHO?? EXACTLY!!!","Why did the code go to therapy? Too many unresolved promises!!"]};
 const CMDS=["help","briefing","forecast","homework add","homework","homework done","notes","note","quiz","flashcard add","flashcard quiz","flashcard stats","gpa","grade","timer","remind me to","pomodoro","break time","study tip","focus stats","motivate me","convert","count words","reading time","bmi","age","tip","password","recipe","expense","expenses","loan","time in","binary","color","water","sleep","define","wiki","quote","fact","trivia","riddle","movie","book","music","game","flip","roll","random number","days until","open","search","pictures","joke","good morning","good night","schedule add","schedule","remember","what do you remember","forget","alias","aliases","unalias","zen","theme cyan","theme gold","theme crimson","theme green","stats","version","about"];
+
 function nextQ(){const a=ri(3,12),b=ri(3,12);quiz.n++;quiz.ans=a*b;
  jarvisSay(`Q${quiz.n}/5: what is ${a} × ${b}? (type "quit quiz" to stop)`);}
 function quizAnswer(t){const q=t.toLowerCase();
@@ -792,6 +817,7 @@ function quizAnswer(t){const q=t.toLowerCase();
   if(quiz.n>=5){const s=quiz.score;quiz=null;jarvisSay(FM(`Final score ${s}/5, {u}. ${s>=4?"Outstanding.":"We shall train again."}`));}
   else nextQ();}
  else jarvisSay("Answer with a number, "+U()+".");}
+
 function localBrain(t){
  const q=(t||"").toLowerCase().trim();let m;
  if(fcIdx!==null){
@@ -927,22 +953,22 @@ function localBrain(t){
   return FM(`Logged $${m[1]} for ${m[2]}. Total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
  if(/expenses?/.test(q)&&!/log|add/.test(q)){const ex=lj("jarvis-expenses",[]);
   if(!ex.length)return FM("No expenses logged, {u}.");
- m=q.match(/convert\s+(\d+(?:\.\d+)?)\s*(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)\s+to\s+(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)/);
- if(m){const r=convertUnits(+m[1],m[2],m[3]);
-  if(r===null)return FM("Cannot convert those units, {u}.");
-  return FM(`${m[1]} ${m[2]} = ${+r.toFixed(4)} ${m[3]}, {u}.`);}
- m=q.match(/(?:count|how many)\s+words?\s+(?:in\s+)?(.+)/);
- if(m)return FM(`${countWords(m[1])} words, {u}.`);
- m=q.match(/(?:reading time|how long to read)\s+(.+)/);
- if(m)return FM(`${Math.ceil(countWords(m[1])/200)} minute(s) to read, {u}.`);
- m=q.match(/bmi\s+(\d+(?:\.\d+)?)\s*(kg|lb)\s+(\d+(?:\.\d+)?)\s*(cm|in)/);
- if(m){const bmi=calculateBMI(+m[1],m[4]==="in"?+m[3]*2.54:+m[3],m[2]==="lb"?"imperial":"metric");
-  const cat=bmi<18.5?"underweight":bmi<25?"normal":bmi<30?"overweight":"obese";
-  return FM(`BMI: ${bmi} (${cat}), {u}.`);}
- m=q.match(/(?:how old|age)\s+(?:if born|born on)?\s*(\d{4})-(\d{1,2})-(\d{1,2})/);
- if(m)return FM(`${calculateAge(`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`)} years old, {u}.`);
- m=q.match(/tip\s+(\d+(?:\.\d+)?)\s*(?:at|for)?\s*(\d+)%?/);
- if(m){const tp=calculateTip(+m[1],+m[2]);return FM(`Tip: $${tp.tip}, total: $${tp.total}, {u}.`);}
+  return FM(`${ex.length} expense(s), total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
+ m=q.match(/loan\s+(\d+(?:\.\d+)?)\s+at\s+(\d+(?:\.\d+)?)%\s+for\s+(\d+)\s*years?/);
+ if(m){const l=calculateLoan(+m[1],+m[2],+m[3]);
+  return FM(`Monthly: $${l.monthly}, total: $${l.total}, interest: $${l.interest}, {u}.`);}
+ m=q.match(/(?:convert|what is)\s+(\w+)\s+in\s+(binary|hex|decimal|octal)/);
+ if(m)return FM(`${m[1]} in ${m[2]}: ${convertNumberBase(m[1],10,{binary:2,hex:16,decimal:10,octal:8}[m[2]])}, {u}.`);}
+ if(/color|colour/.test(q)){const c=generateColor();return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
+ if(/water|hydrat|drink/.test(q)){const g=trackWater();addXP(2);renderProfile();
+  return FM(PK({butler:`Hydration logged. ${g} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${g} today.`,pirate:`Grog o' the clear kind, arr! ${g} today!`,hype:`WATER BREAK!! ${g} GLASSES TODAY!!`}));}
+ m=q.match(/sleep\s+(\d+(?:\.\d+)?)\s*hours?/);
+ if(m){const logs=trackSleep(m[1]);const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
+  return FM(`Logged ${m[1]}h sleep. Average: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
+ if(/sleep/.test(q)&&!/\d/.test(q)){const logs=lj("jarvis-sleep",[]);
+  if(!logs.length)return FM("No sleep logged, {u}. Say 'sleep 8 hours'.");
+  return FM(`Average sleep: ${+(logs.reduce((s,l)=>s+l.hours,0)/logs.length).toFixed(1)}h over ${logs.length} night(s), {u}.`);}
+ m=q.match(/(?:transform|convert|make)\s+(.+?)\s+to\s+(upper|lower|reverse|title|snake|camel)/);
  if(m)return FM(`"${transformText(m[1],m[2])}", {u}.`);
  m=q.match(/^theme (cyan|gold|crimson|green)/);
  if(m){document.body.dataset.theme=m[1];localStorage.setItem("jarvis-theme",m[1]);
@@ -998,6 +1024,7 @@ function localBrain(t){
  if(/about/.test(q))return FM("I am J.A.R.V.I.S. — 170+ commands, 30+ functions, XP & ranks, streaks, briefings, conversation mode, docked comms with presence, broadcasts, themes, particles, backups, offline brain + Gemini uplink, {u}.");
  if(/stats?|statistics/.test(q)){return FM(`${lj("jarvis-homework",[]).length} homework, ${lj("jarvis-notes",[]).length} notes, ${lj("jarvis-flashcards",[]).length} flashcards, ${Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0)} focus sessions, rank ${rankOf(lj("jarvis-xp",{})[session]||0)}, {u}.`);}
  return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
+
 async function handleCommand(t){log("> "+t);beep(760,.04);
  t=fuzzy(t);
  const AL=lj("jarvis-aliases",{});const first=t.split(" ")[0].toLowerCase();
@@ -1053,6 +1080,8 @@ $("btn-wake").onclick=()=>{
   wrec.start();
   jarvisSay(FM(`Wake word active — say "hey ${identity.name}" then a command, {u}.`));}
  else{try{wrec.stop();}catch(e){}}};
+
+/* ============ GEMINI ============ */
 function log(t){const d=document.createElement("div");d.textContent=t;$("corelog").appendChild(d);
  while($("corelog").children.length>7)$("corelog").removeChild($("corelog").firstChild);}
 function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": ";
@@ -1070,6 +1099,8 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
    {method:"POST",headers:{"Content-Type":"application/json"},body});
   const j=await r.json();const out=j?.candidates?.[0]?.content?.parts?.[0]?.text;if(out)return out;}catch(e){}}
  return null;}
+
+/* ============ DOCKED COMMS + PRESENCE + BROADCAST ============ */
 (function(){
  if(typeof mqtt==="undefined")return;
  const list=$("c-list"),nameI=$("c-name"),chanI=$("c-chan"),textI=$("c-text");
@@ -1115,6 +1146,8 @@ async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")|
  $("c-send").onclick=send;
  textI.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
 })();
+
+/* ============ TARGETING ============ */
 let tgtOn=false,locked=false;
 function setTgt(on){tgtOn=on;$("tgt").classList.toggle("on",on);beep(on?1200:500,.06);}
 $("btn-tgt").onclick=()=>setTgt(!tgtOn);
@@ -1130,14 +1163,19 @@ $("tgt").addEventListener("click",()=>{locked=!locked;
  $("t-lock").textContent=locked?"HOLD":"--";
  $("t-range").textContent=locked?(Math.random()*18+2).toFixed(1)+"m":"--";
  beep(locked?1400:700,.07);});
+
+/* ============ KONAMI ============ */
 const K=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];let ki=0;
 window.addEventListener("keydown",e=>{
  ki=(e.key===K[ki])?ki+1:(e.key===K[0]?1:0);
  if(ki===K.length){ki=0;document.body.classList.toggle("gold");
   COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
   beep(1200,.15);jarvisSay("Mark XLII gold-titanium protocol engaged. Flattering, sir.");}});
+
+/* PWA */
 if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
  navigator.serviceWorker.register("sw.js").catch(()=>{});
+
 renderProfile();
 window.JARVIS_READY=true;
 log("STARK PROTOCOL v0.6 — awaiting boot…");
