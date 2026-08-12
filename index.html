@@ -927,22 +927,22 @@ function localBrain(t){
   return FM(`Logged $${m[1]} for ${m[2]}. Total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
  if(/expenses?/.test(q)&&!/log|add/.test(q)){const ex=lj("jarvis-expenses",[]);
   if(!ex.length)return FM("No expenses logged, {u}.");
-  return FM(`${ex.length} expense(s), total: $${+ex.reduce((s,e)=>s+e.amount,0).toFixed(2)}, {u}.`);}
- m=q.match(/loan\s+(\d+(?:\.\d+)?)\s+at\s+(\d+(?:\.\d+)?)%\s+for\s+(\d+)\s*years?/);
- if(m){const l=calculateLoan(+m[1],+m[2],+m[3]);
-  return FM(`Monthly: $${l.monthly}, total: $${l.total}, interest: $${l.interest}, {u}.`);}
- m=q.match(/(?:convert|what is)\s+(\w+)\s+in\s+(binary|hex|decimal|octal)/);
- if(m)return FM(`${m[1]} in ${m[2]}: ${convertNumberBase(m[1],10,{binary:2,hex:16,decimal:10,octal:8}[m[2]])}, {u}.`);}
- if(/color|colour/.test(q)){const c=generateColor();return FM(`Random color: ${c.hex} (${c.rgb}), {u}.`);}
- if(/water|hydrat|drink/.test(q)){const g=trackWater();addXP(2);renderProfile();
-  return FM(PK({butler:`Hydration logged. ${g} glass(es) today, {u}.`,snark:`Water. The original brain juice. ${g} today.`,pirate:`Grog o' the clear kind, arr! ${g} today!`,hype:`WATER BREAK!! ${g} GLASSES TODAY!!`}));}
- m=q.match(/sleep\s+(\d+(?:\.\d+)?)\s*hours?/);
- if(m){const logs=trackSleep(m[1]);const avg=logs.reduce((s,l)=>s+l.hours,0)/logs.length;
-  return FM(`Logged ${m[1]}h sleep. Average: ${+avg.toFixed(1)}h over ${logs.length} night(s), {u}.`);}
- if(/sleep/.test(q)&&!/\d/.test(q)){const logs=lj("jarvis-sleep",[]);
-  if(!logs.length)return FM("No sleep logged, {u}. Say 'sleep 8 hours'.");
-  return FM(`Average sleep: ${+(logs.reduce((s,l)=>s+l.hours,0)/logs.length).toFixed(1)}h over ${logs.length} night(s), {u}.`);}
- m=q.match(/(?:transform|convert|make)\s+(.+?)\s+to\s+(upper|lower|reverse|title|snake|camel)/);
+ m=q.match(/convert\s+(\d+(?:\.\d+)?)\s*(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)\s+to\s+(m|km|ft|mi|yd|in|kg|lb|g|oz|c|f)/);
+ if(m){const r=convertUnits(+m[1],m[2],m[3]);
+  if(r===null)return FM("Cannot convert those units, {u}.");
+  return FM(`${m[1]} ${m[2]} = ${+r.toFixed(4)} ${m[3]}, {u}.`);}
+ m=q.match(/(?:count|how many)\s+words?\s+(?:in\s+)?(.+)/);
+ if(m)return FM(`${countWords(m[1])} words, {u}.`);
+ m=q.match(/(?:reading time|how long to read)\s+(.+)/);
+ if(m)return FM(`${Math.ceil(countWords(m[1])/200)} minute(s) to read, {u}.`);
+ m=q.match(/bmi\s+(\d+(?:\.\d+)?)\s*(kg|lb)\s+(\d+(?:\.\d+)?)\s*(cm|in)/);
+ if(m){const bmi=calculateBMI(+m[1],m[4]==="in"?+m[3]*2.54:+m[3],m[2]==="lb"?"imperial":"metric");
+  const cat=bmi<18.5?"underweight":bmi<25?"normal":bmi<30?"overweight":"obese";
+  return FM(`BMI: ${bmi} (${cat}), {u}.`);}
+ m=q.match(/(?:how old|age)\s+(?:if born|born on)?\s*(\d{4})-(\d{1,2})-(\d{1,2})/);
+ if(m)return FM(`${calculateAge(`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`)} years old, {u}.`);
+ m=q.match(/tip\s+(\d+(?:\.\d+)?)\s*(?:at|for)?\s*(\d+)%?/);
+ if(m){const tp=calculateTip(+m[1],+m[2]);return FM(`Tip: $${tp.tip}, total: $${tp.total}, {u}.`);}
  if(m)return FM(`"${transformText(m[1],m[2])}", {u}.`);
  m=q.match(/^theme (cyan|gold|crimson|green)/);
  if(m){document.body.dataset.theme=m[1];localStorage.setItem("jarvis-theme",m[1]);
