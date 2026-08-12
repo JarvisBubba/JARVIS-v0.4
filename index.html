@@ -126,19 +126,31 @@ canvas{width:100%;display:block}
 <div id="boot" class="overlay"><div id="bootlog"></div><div class="skip">CLICK OR ANY KEY TO SKIP ▸</div></div>
 
 <script>
-/* FREEZE-SHIELD — boot can ALWAYS be dismissed, even if the main script crashes */
+/* FREEZE-SHIELD + CRASH REPORTER — independent of the main script */
 (function(){
   var done=false;
   function kill(){if(done)return;done=true;
     var b=document.getElementById("boot");
-    if(b){b.style.transition="opacity .5s";b.style.opacity="0";
-      setTimeout(function(){b.remove();},600);}}
+    if(b){b.style.transition="opacity .5s";b.style.opacity="0";setTimeout(function(){b.remove();},600);}}
   document.getElementById("boot").addEventListener("click",kill);
   window.addEventListener("keydown",kill,{once:true});
-  setTimeout(kill,7000); /* hard failsafe */
+  setTimeout(kill,7000);
+  window.addEventListener("error",function(e){
+    window.__JARVIS_ERR=e.message+" (line "+e.lineno+")";
+    var d=document.getElementById("bootlog");
+    if(d){var m=document.createElement("div");m.style.color="#ff7b7b";
+     m.textContent="⚠ SCRIPT ERROR: "+window.__JARVIS_ERR;d.appendChild(m);}
+  },true);
+  setTimeout(function(){
+    if(!window.JARVIS_READY){
+      var t=document.createElement("div");
+      t.style.cssText="position:fixed;bottom:10px;left:10px;right:10px;color:#ff7b7b;z-index:999;background:#200;padding:10px;border:1px solid #f55;white-space:pre-wrap;font:12px monospace;";
+      t.textContent="MAIN SCRIPT DID NOT FINISH.\nError: "+(window.__JARVIS_ERR||"unknown — press F12 → Console, copy the red text")+"\nPaste this message to your developer.";
+      document.body.appendChild(t);}
+  },4000);
 })();
 </script>
- 
+
 <div id="gate" class="overlay hidden">
  <div id="term" class="panel">
   <div id="tlog"></div>
@@ -201,7 +213,7 @@ canvas{width:100%;display:block}
  <header id="top" class="panel">
   <div class="badge"><div class="avatar"></div>
    <div><b>J.A.R.V.I.S.</b><small>USER: <span id="badge-user">—</span></small><small id="xp">—</small></div></div>
-  <div>⚠ Bubba PROTOCOL · CORE: <b id="corestate">ONLINE</b> · UPLINK: <b id="uplinkstate">OFFLINE</b> · <span id="utcmini">--:--:--</span> UTC</div>
+  <div>⚠ STARK PROTOCOL · CORE: <b id="corestate">ONLINE</b> · UPLINK: <b id="uplinkstate">OFFLINE</b> · <span id="utcmini">--:--:--</span> UTC</div>
   <nav>
    <button class="btn" id="btn-brief" title="Briefing">📋</button>
    <button class="btn" id="btn-conv" title="Conversation mode">🗨</button>
@@ -244,7 +256,7 @@ canvas{width:100%;display:block}
    <g class="ring r1">
     <circle cx="200" cy="200" r="194" fill="none" stroke="var(--cy)" stroke-opacity=".5" stroke-dasharray="3 6"/>
     <circle cx="200" cy="200" r="182" fill="none" stroke="var(--cy)" stroke-opacity=".75" stroke-width="3" stroke-dasharray="70 14 6 14"/></g>
-   <g class="ring r4"><text><textPath href="#tp">Bubba INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.6 · </textPath></text></g>
+   <g class="ring r4"><text><textPath href="#tp">STARK INDUSTRIES · ARC REACTOR MARK VII · UNIFIED OS 0.6 · </textPath></text></g>
    <g class="ring r2"><circle cx="200" cy="200" r="150" fill="none" stroke="var(--cy)" stroke-opacity=".85" stroke-width="14" stroke-dasharray="16 10"/></g>
    <g class="ring r3">
     <circle cx="200" cy="200" r="126" fill="none" stroke="var(--hot)" stroke-opacity=".9" stroke-width="2" stroke-dasharray="40 8 4 8"/>
@@ -284,7 +296,7 @@ canvas{width:100%;display:block}
    <canvas id="g-up" width="300" height="36"></canvas></section>
  </aside>
 
- <footer id="foot"><span>Bubba INDUSTRIES</span></footer>
+ <footer id="foot"><span>STARK INDUSTRIES</span></footer>
 </div>
 
 <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
@@ -299,15 +311,13 @@ let COL=getComputedStyle(document.body).getPropertyValue("--cy").trim()||"#3fd0f
 let identity=Object.assign({name:"JARVIS",user:"",pers:"butler",voice:true,sounds:true},lj("jarvis-identity",{}));
 let skip=false;
 
-/* toasts */
 function toast(msg){const d=document.createElement("div");d.className="toast";d.textContent=msg;
  $("toasts").appendChild(d);setTimeout(()=>d.remove(),5000);}
 
-/* sound */
 let AC=null;
 function beep(f=880,d=.06,type="square",g=.05){
  if(!identity.sounds)return;
- try{AC=AC||new (window.AudioContext||window.webkitAudioContext());
+ try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
   const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f;ga.gain.value=g;
   o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
 let convOn=false,frec=null;
@@ -343,15 +353,14 @@ onFlare=()=>burst(24);
   sx.globalAlpha=Math.max(0,p.l);sx.fillStyle=COL;sx.fillRect(p.x,p.y,2,2);});
  sx.globalAlpha=1;}requestAnimationFrame(loop);})();
 
-/* battery */
 if(navigator.getBattery)navigator.getBattery().then(b=>{
  const upd=()=>$("reactor").classList.toggle("low",b.level<.25&&!b.charging);
  upd();b.addEventListener("levelchange",upd);b.addEventListener("chargingchange",upd);}).catch(()=>{});
 
 /* ============ BOOT ============ */
-const bootLines=["Bubba INDUSTRIES UNIFIED OS v0.6.0","(C) Bubba INDUSTRIES — ALL RIGHTS RESERVED","",
+const bootLines=["STARK INDUSTRIES UNIFIED OS v0.6.0","(C) STARK INDUSTRIES — ALL RIGHTS RESERVED","",
 "INIT KERNEL ............. OK","ARC REACTOR HANDSHAKE ... OK","MEMORY LATTICE .......... 512 TB OK",
-"NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ Bubba PROTOCOL","",
+"NEURAL LOAD ............. 98.2%","UPLINK ARRAY ............ SAT-7 / AES-256","SECURITY ................ STARK PROTOCOL","",
 "BOOT COMPLETE — WAKE UP, SIR."];
 let bootDone=false;
 function finishBoot(){
@@ -376,7 +385,7 @@ setTimeout(finishBoot,6000);
 /* ============ TERMINAL LOGIN (BYRON = ONLY ADMIN) ============ */
 let users=lj("jarvis-users",{});
 const isAdmin=n=>(n||"").toLowerCase()==="byron";
-if(users.admin&&users.admin.pass==="Bubba")delete users.admin;
+if(users.admin&&users.admin.pass==="stark")delete users.admin;
 Object.keys(users).forEach(n=>{users[n].role=isAdmin(n)?"admin":"user";});
 sj("jarvis-users",users);
 let session=localStorage.getItem("jarvis-session")||"";
@@ -565,13 +574,11 @@ $("btn-snd").onclick=()=>{identity.sounds=!identity.sounds;sj("jarvis-identity",
 function syncSnd(){$("btn-snd").textContent=identity.sounds?"🔊":"";}
 syncSnd();
 if(localStorage.getItem("jarvis-gemini-key"))$("uplinkstate").textContent="ONLINE";
-/* voice picker */
 function fillVoices(){const vs=speechSynthesis.getVoices();const sel=$("set-tts");
  sel.innerHTML='<option value="">Auto (British butler)</option>'+vs.map(v=>`<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
  sel.value=localStorage.getItem("jarvis-tts-voice")||"";}
 if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=fillVoices;fillVoices();}
 $("set-tts").onchange=e=>localStorage.setItem("jarvis-tts-voice",e.target.value);
-/* theme picker */
 const THEMES=["cyan","gold","crimson","green"];
 $("btn-theme").onclick=()=>{
  const cur=document.body.dataset.theme||"cyan";
@@ -579,12 +586,11 @@ $("btn-theme").onclick=()=>{
  document.body.dataset.theme=nx;localStorage.setItem("jarvis-theme",nx);
  COL=getComputedStyle(document.body).getPropertyValue("--cy").trim();
  toast("🎨 Theme: "+nx);beep(880,.06);};
-/* zen mode */
 function setZen(on){document.body.classList.toggle("zen",on);toast(on?"🧘 Zen mode — distractions hidden":"Zen off");beep(on?500:700,.06);}
 $("btn-zen").onclick=()=>setZen(!document.body.classList.contains("zen"));
 
-/* ============ 0.6: XP / RANKS / STREAKS / PROFILE ============ */
-const RANKS=["Cadet","Ensign","Engineer","Specialist","Commander","Director","Bubba Protégé"];
+/* ============ XP / RANKS / STREAKS / PROFILE ============ */
+const RANKS=["Cadet","Ensign","Engineer","Specialist","Commander","Director","Stark Protégé"];
 const lvl=x=>Math.floor(Math.sqrt(x/100));
 const rankOf=x=>RANKS[Math.min(lvl(x),RANKS.length-1)];
 let streak=lj("jarvis-streak",{last:"",login:0,study:0,lastStudy:""});
@@ -748,7 +754,6 @@ function trackWater(){let w=lj("jarvis-water",[]);const t=new Date().toDateStrin
 function trackSleep(h){let s=lj("jarvis-sleep",[]);s.push({hours:+h,date:new Date().toISOString()});
  if(s.length>30)s=s.slice(-30);sj("jarvis-sleep",s);return s;}
 
-/* web launcher */
 const SITES={google:"https://www.google.com",youtube:"https://www.youtube.com",gmail:"https://mail.google.com",
 classroom:"https://classroom.google.com",drive:"https://drive.google.com",docs:"https://docs.google.com",
 maps:"https://maps.google.com",translate:"https://translate.google.com",wikipedia:"https://www.wikipedia.org",
@@ -773,7 +778,6 @@ function webLaunch(t){
   return{url:"https://www.google.com/search?q="+encodeURIComponent(s),say:`Popping the search for "${s}", {u}.`};}
  return null;}
 
-/* briefing */
 function briefing(){
  const S=schedGet();const d=new Date();
  const now=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
@@ -792,7 +796,6 @@ function briefing(){
  jarvisSay(FM("Briefing on screen, {u}. Rain chance "+rain+"%"+(rain>=50?" — take an umbrella.":".")));}
 $("btn-brief").onclick=briefing;
 $("brief-close").onclick=()=>$("brief").classList.add("hidden");
-/* conversation mode */
 $("btn-conv").onclick=()=>{convOn=!convOn;$("btn-conv").classList.toggle("hot",convOn);
  jarvisSay(FM(convOn?"Conversation mode on — I'll listen for 12 seconds after each reply, {u}.":"Conversation mode off, {u}."));};
 
@@ -837,7 +840,6 @@ function localBrain(t){
  if(/forecast|umbrella/.test(q)){const r=window._fc.rain||0;
   return FM(`Next 6 hours: max rain chance ${r}%. ${r>=50?"Bring an umbrella, {u}.":"You're safe without one, {u}."}`);}
  if(/^zen/.test(q)){setZen(!document.body.classList.contains("zen"));return null;}
- /* aliases */
  m=q.match(/^alias (\w+) = (.+)/);
  if(m){const A=lj("jarvis-aliases",{});A[m[1]]=m[2];sj("jarvis-aliases",A);
   return FM(`Alias learned: "${m[1]}" → "${m[2]}", {u}.`);}
@@ -1018,7 +1020,7 @@ function localBrain(t){
  if(/chat|comms/.test(q))return FM("Comms docked on the right panel — or 💬 for the full page, {u}.");
  if(/target/.test(q))return FM("Press T or ◎ to engage targeting mode, {u}.");
  if(/gold|secret|konami|easter/.test(q))return FM("Certain protocols are best discovered personally, {u}. ↑↑↓↓…");
- if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.6.0 — Bubba Industries Unified OS, {u}.");
+ if(/version/.test(q))return FM("J.A.R.V.I.S. OS v0.6.0 — Stark Industries Unified OS, {u}.");
  if(/about/.test(q))return FM("I am J.A.R.V.I.S. — 170+ commands, 30+ functions, XP & ranks, streaks, briefings, conversation mode, docked comms with presence, broadcasts, themes, particles, backups, offline brain + Gemini uplink, {u}.");
  if(/stats?|statistics/.test(q)){return FM(`${lj("jarvis-homework",[]).length} homework, ${lj("jarvis-notes",[]).length} notes, ${lj("jarvis-flashcards",[]).length} flashcards, ${Object.values(lj("jarvis-focus",{})).reduce((a,b)=>a+b,0)} focus sessions, rank ${rankOf(lj("jarvis-xp",{})[session]||0)}, {u}.`);}
  return FM(PK({butler:"I'm afraid my offline mind is limited, {u}. Connect a Gemini key in settings for full cognition.",snark:"That's above my pay grade, which is zero. Add a Gemini key.",pirate:"The winds o' that question be calm, matey. Feed me a Gemini key.",hype:"I NEED A GEMINI KEY TO ANSWER THAT!! LET'S GO!!"}));}
@@ -1059,7 +1061,6 @@ $("mic-btn").onclick=()=>{
   rec.onresult=e=>{const t=e.results[0][0].transcript;consoleEl.value=t;handleCommand(t);};
   rec.onend=()=>{micOn=false;$("mic-btn").classList.remove("hot");};}
  if(micOn)rec.stop();else{rec.start();micOn=true;$("mic-btn").classList.add("hot");beep(980,.06);}};
-/* wake word */
 let wakeOn=false,wrec=null;
 $("btn-wake").onclick=()=>{
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1090,7 +1091,7 @@ function jarvisSay(t){speak(t);flare();const pre=identity.name.toUpperCase()+": 
 function sysPrompt(){const P={butler:"Dry, refined British butler. Polite, understated wit.",
  snark:"Sarcastic and cutting, but always helpful.",pirate:"Ruthless space pirate. Pepper with 'arr' and nautical slang.",
  hype:"Over-caffeinated hype man. Pure energy, exclamation points."}[identity.pers];
- return `You are ${identity.name}, an AI in a Bubba Industries HUD. ${P} Address the user as "${identity.user||"sir"}". Replies under 3 sentences.`;}
+ return `You are ${identity.name}, an AI in a Stark Industries HUD. ${P} Address the user as "${identity.user||"sir"}". Replies under 3 sentences.`;}
 async function askGemini(t){const key=localStorage.getItem("jarvis-gemini-key")||"";if(!key)return null;
  const body=JSON.stringify({systemInstruction:{parts:[{text:sysPrompt()}]},contents:[{parts:[{text:t}]}]});
  for(const m of["gemini-2.0-flash","gemini-1.5-flash"]){try{
@@ -1176,7 +1177,8 @@ if("serviceWorker" in navigator&&location.protocol.startsWith("http"))
  navigator.serviceWorker.register("sw.js").catch(()=>{});
 
 renderProfile();
-log("Bubba PROTOCOL v0.6 — awaiting boot…");
+window.JARVIS_READY=true;
+log("STARK PROTOCOL v0.6 — awaiting boot…");
 </script>
 </body>
 </html>
